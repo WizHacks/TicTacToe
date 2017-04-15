@@ -8,3 +8,7 @@ An online modified version of the game Tic-Tac-Toe using Internet domain sockets
 
 
 ### Running the Program
+-tbd
+
+### References/Tutorials
+- [ePoll](http://scotdoyle.com/python-epoll-howto.html)
