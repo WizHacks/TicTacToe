@@ -1,7 +1,7 @@
-from socket import *
 from argparse import ArgumentParser
 import time
 import json
+import socket
 
 class Player():
     def __init__(self, username, status=True, gameId=0, timeLoggedIn = None):
@@ -15,9 +15,9 @@ class Player():
 
     def login(self, clientSocket):
         json_data = json.dumps(self.createPlayerDictionary())        
-        message = "LOGIN ", json_data, "\r\n\r\n"
+        message = "LOGIN " + json_data + "\r\n\r\n"
         clientSocket.send(message)
-
+        # TO-DO
         # get 200 or 401 or 400 
 
     def createPlayerDictionary(self):
@@ -29,7 +29,7 @@ class Player():
         return playerDictionary
 
     def checkProtocol(self, packet):
-        
+        return True
 
     def printInfo(self):
         print 'username: ', self.username, '\nstatus: ', self.status, '\ngameId: ', self.gameId, '\ntimeLoggedIn: ', self.timeLoggedIn
@@ -48,15 +48,18 @@ if __name__ == "__main__":
     serverName = args.serverName
     serverPort = int(args.serverPort)
 
-    
-    clientSocket = socket(AF_INET, SOCK_STREAM)
-    #clientSocket.connect((serverName,serverPort))
-    username = raw_input("Input your username: ")
-    player = Player(username)
-    player.printInfo()
-    player.login()    
-    # #clientSocket.send(message.encode())
-    # # client waits to receive data from the server
-    # modifiedMessage = clientSocket.recv(2048)
-    # print("From server: ", modifiedMessage.decode())
-    clientSocket.close()
+    try:
+        clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        #clientSocket.connect((serverName,serverPort))
+        username = raw_input("Input your username: ")
+        player = Player(username)
+        player.printInfo()
+        player.login(clientSocket)    
+        # when login is successful
+        epoll = select.epoll()
+        epoll.register(clientSocket.fileno(), select.EPOLLIN)
+
+    except socket.error:
+        print "Error connecting to server. Exiting ..."
+    finally:
+        clientSocket.close()
