@@ -33,6 +33,25 @@ class Player():
 
     def printInfo(self):
         print 'username: ', self.username, '\nstatus: ', self.status, '\ngameId: ', self.gameId, '\ntimeLoggedIn: ', self.timeLoggedIn
+
+    def printHelp(self, single):     # boolean single-is this a single player game? true:single    no:multi
+        if single:
+            print "help\t\t- Prints this menu, which is a list of supported commands along with their syntax"
+        print "login [username] \t- logs into a server with unique id.  Force quits if username is already taken"
+        print "place [index]"
+        print "\t\t[[ 1, 2, 3]"
+        print "\t\t [ 4, 5, 6]"
+        print "\t\t [ 7, 8, 9]]"
+        print "\t\t\t - place your symbol at the corresponding poisition labeled in grid above"
+        print "exit\t\t- quits the program at any time"
+
+        if not single:
+            print "games\t\t- obtains a list of all ongoing games along with their respective gameID and players"
+            print "who\t\t- obtains a list of all players available to play"
+            print "play [player] \t- challenges the specified player if s/he is available to play"
+            print "observe [gameID]\t- tunes into the the specified game"
+            print "unobserve [gameID]\t- stops recieving incoming data about particular game"
+
         
 if __name__ == "__main__":    
     # parse commandline arguments

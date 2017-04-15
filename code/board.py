@@ -6,11 +6,9 @@ class TTTBoard(object):
 		self.player2 = player2
 		self.currentPlayer = currentPlayer
 		self.observers=[]
-		self.board = [0,0,0,0,0,0,0,0,0]
+		self.board = [0, 0, 0, 0, 0, 0, 0, 0, 0]
 
 	def gameFinished(self):
-		#print("Game has finished")
-		
 		winner = 0
 		# first row
 		if self.board[0] != 0 and self.board[0] == self.board[1] and self.board[0] == self.board[2]:
@@ -67,10 +65,12 @@ class TTTBoard(object):
 				print("\n")
 
 	def addObserver(self, observer):
+		print(observer + "has started watching the game")
 		self.observers.extend([observer])
 
 	def removeObserver(self, observer):
 		if observer in self.observers:
+			print(observer + "has left watching the game")
 			self.observers.remove(observer)
 		# else:
 		# 	print(observer + " is already not observing")
