@@ -43,17 +43,17 @@ class TTTBoard(object):
 			print("This game is a draw")
 
 	def place(self, move):
-		isValidMove(self, move)
+		if self.isValidMove(move):
+			self.board[move - 1] = 1 if self.player1 == self.currentPlayer else 2
+			self.currentPlayer = self.player2 if self.player1 == self.currentPlayer else self.player1
+			self.gameFinished()
 
 	def isValidMove(self, move):
 		#global currentPlayer
 		if move > 9 or move < 0 or self.board[move-1] != 0:
 			print("Illegal Move")
-			return
-		self.board[move - 1] = 1 if self.player1 == self.currentPlayer else 2
-		self.currentPlayer = self.player2 if self.player1 == self.currentPlayer else self.player1
-		self.printBoard()
-		self.gameFinished()
+			return False
+		return True
 
 	def printBoard(self):
 		for i in range(0, len(self.board)):
@@ -65,15 +65,15 @@ class TTTBoard(object):
 				print("\n")
 
 	def addObserver(self, observer):
-		print(observer + "has started watching the game")
+		print(observer + " has started watching the game")
 		self.observers.extend([observer])
 
 	def removeObserver(self, observer):
 		if observer in self.observers:
-			print(observer + "has left watching the game")
+			print(observer + " has left watching the game")
 			self.observers.remove(observer)
-		# else:
-		# 	print(observer + " is already not observing")
+		else:
+			print(observer + " is already not observing")
 
 	def comment(self, player, comment):
 		print(player + ": " + comment)
@@ -88,24 +88,20 @@ class TTTBoard(object):
 		print("\nBoard allignment: ")
 		self.printBoard()
 
-board = TTTBoard("p1", "p2", "p1") 
-print("board 1")
-board.isValidMove(1)
-print( "board 2")
-board.isValidMove(1)
-print ("board 3")
-board.isValidMove(4)
-print ("board 4")
-board.isValidMove(3)
-print ("board 5")
-board.isValidMove(1)
-board.addObserver("Wendy")
-board.addObserver("JJ")
-board.debug()
-board.removeObserver("JJ")
-board.removeObserver("JJ")
-board.debug()
-print ("board 6")
-board.isValidMove(5)
-print ("board 7")
-board.isValidMove(2)
+def test():
+	board = TTTBoard("p1", "p2", "p1") 
+	board.place(1)
+	board.place(1)
+	board.place(4)
+	board.place(3)
+	board.place(1)
+	board.addObserver("Wendy")
+	board.addObserver("JJ")
+	board.debug()
+	board.place("JJ")
+	board.removeObserver("JJ")
+	board.debug()
+	board.place(5)
+	board.place(2)
+
+test()
