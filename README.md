@@ -8,7 +8,12 @@ An online modified version of the game Tic-Tac-Toe using Internet domain sockets
 
 
 ### Running the Program
--tbd
+- work in progress
+Start the server on a computer
+Start the client on a computer with arguments
+```
+code goes here
+```
 
 ### References/Tutorials
 - [ePoll](http://scotdoyle.com/python-epoll-howto.html)
