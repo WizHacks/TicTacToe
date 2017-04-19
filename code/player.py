@@ -1,77 +1,127 @@
 from argparse import ArgumentParser
+from jaw_enums import JAWMethods, JAWResponses, JAWStatuses
 import time
 import json
 import socket
 
-class Player():
+
+class Player(object):
     def __init__(self, username, server, status=True, gameId=0, timeLoggedIn = None):
         self.username = username  
         self.status = status
         self.gameId = gameId
         self.server = server
+        self.lastRequestSent = None
+        self.isLoggedIn = False
         if timeLoggedIn != None:
-            self.timeLoggedIn = timeLoggedIn  
-        else:
-            self.timeLoggedIn = time.time()   
+            self.timeLoggedIn = timeLoggedIn          
+
+    def __str__(self):
+        print 'username: ', self.username, '\nstatus: ', self.status, '\ngameId: ', self.gameId, '\ntimeLoggedIn: ', self.timeLoggedIn        
 
     '''main methods'''        
     def login(self):
         '''
         Log the player into the server denoted by server
-        @return true if successful, false otherwise
-
         '''
         print 'Login in progress ...'
         json_data = json.dumps(self.createPlayerDictionary())        
-        message = "LOGIN " + json_data + "\r\n\r\n"
-        clientSocket.send(message)
-        # TO-DO
-        # get 200 or 401 or 400 
+        message = JAWMethods.LOGIN + " " + json_data + "\r\n\r\n"
+        self.lastRequestSent = JAWMethods.LOGIN
+        self.sendMessage(message)        
 
     def play(self, opponent):
         '''
         Send request to server asking to play the specified opponent
         @param opponent the player we wish to versus
-        @return true if successful, false otherwise
 
         '''
-        return
+        self.lastRequestSent = JAWMethods.PLAY
 
     def who(self):
         '''
         Send request to server asking for available users         
-        @return true if successful, false otherwise
         '''
+        self.lastRequestSent = JAWMethods.WHO
         return   
         
     def exit(self):
         '''
-        Send break up request to server 
-        @return true if successful, false otherwise     
+        Send break up request to server    
         '''
-        return
+        self.lastRequestSent = JAWMethods.EXIT
 
     def place(self, move):
         '''
         Send request to server to place move at given location         
-        @return true if successful, false otherwise
         '''
-        return
+        self.lastRequestSent = JAWMethods.PLACE
+
+    '''Helper methods'''
+    def makeRequest(self, request):
+        if request == JAWMethods.LOGIN:
+            self.login()
+        elif:
+            print "finish writing rest of code"
 
     def printBoard(self, board):
         '''
         Display the current game board state
+        @param board a list of board indices
         '''
-        print "board"  
+        print "board"     
 
     def sendMessage(self, message):
         '''
         Send request to client socket with given message
         @param message the message to send to server
         '''
-        return  
+        clientSocket.send(message)
+        return
 
-    def help(self):    
+    def createPlayerDictionary(self):
+        playerDictionary = {}
+        playerDictionary['username'] = self.username
+        playerDictionary['status'] = self.status
+        playerDictionary['gameId'] = self.gameId
+        playerDictionary['timeLoggedIn'] = self.timeLoggedIn
+        return playerDictionary    
+    
+'''utility functions'''
+def processResponse(requestState, response):
+    '''
+    Process the response message returned by the server and take appropriate action
+    @param requestState player request state
+    @param response response received from the server
+    '''
+    responseList = self.checkProtocol(response)
+    if responseList[0] == JAWResponses.OK and self.requestState == JAWMethods.LOGIN:        
+        self.timeLoggedIn = time.time()
+        self.isLoggedIn = True
+        print "Logged in successfully at time: ", time.strftime("%b %d %Y %H:%M:%S", time.gmtime(self.timeLoggedIn))
+
+def processStdin(stdinInput):
+    '''
+    Process the stdin input and take appropriate action
+    @param stdinInput input received from stdin
+    '''
+    return
+
+def checkProtocol(packet):
+    '''
+    Checks to see if response from server is valid protocol
+    Raise an exception if it does not
+    @return list of extracted protocol details
+    '''
+    return True   
+
+def checkUsername(username):
+    '''Determine whether the username is valid or not'''
+    if username.find(" ") == -1:
+        return True
+    return False
+
+ def help():    
         '''
         Prints the help menu
         '''         
@@ -85,43 +135,8 @@ class Player():
         print "who\t\t\t- obtains a list of all players available to play"
         print "play [player] \t\t- challenges the specified player if s/he is available to play"
         print "observe [gameID]\t- tunes into the the specified game"
-        print "unobserve [gameID]\t- stops recieving incoming data about particular game"    
+        print "unobserve [gameID]\t- stops receiving incoming data about particular game"    
 
-    '''Helper methods'''
-    def processResponse(self, response):
-        '''
-        Process the response message returned by the server
-        @return true if successful, false otherwise
-        '''
-        return
-
-
-
-    def checkProtocol(self, packet):
-        '''
-        Checks to see if response from server is valid protocol
-        Raise an exception if it does not
-        '''
-        return True    
-
-    def createPlayerDictionary(self):
-        playerDictionary = {}
-        playerDictionary['username'] = self.username
-        playerDictionary['status'] = self.status
-        playerDictionary['gameId'] = self.gameId
-        playerDictionary['timeLoggedIn'] = self.timeLoggedIn
-        return playerDictionary
-
-    def printInfo(self):
-        print 'username: ', self.username, '\nstatus: ', self.status, '\ngameId: ', self.gameId, '\ntimeLoggedIn: ', self.timeLoggedIn
-    
-'''utility functions'''
-def checkUsername(username):
-    '''Determine whether the username is valid or not'''
-    if username.find(" ") == -1:
-        return True
-    return False
-        
 if __name__ == "__main__":
     # parse commandline arguments
     usage = "%(prog)s serverName serverPort"
@@ -149,7 +164,7 @@ if __name__ == "__main__":
 
         # prompt user to log in
         player.login(clientSocket)    
-        # when login is successful
+        # dont wait for login response from server, user may wish to exit instead
         # while loop here
         # poll stdin and client socket
         epoll = select.epoll()

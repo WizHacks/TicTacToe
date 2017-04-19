@@ -14,7 +14,7 @@ Server server = Server()
 epoll = select.epoll()
 epoll.register(serverSocket.fileno(), select.EPOLLIN)
 
-class Server:
+class Server(object):
 	def __init__(self):
 		self.players = []
 		self.games = {}
