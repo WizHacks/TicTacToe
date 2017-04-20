@@ -17,7 +17,7 @@ class Player(object):
             self.timeLoggedIn = timeLoggedIn          
 
     def __str__(self):
-        print 'username: ', self.username, '\nstatus: ', self.status, '\ngameId: ', self.gameId, '\ntimeLoggedIn: ', self.timeLoggedIn        
+        return 'username: '+ self.username + '\nstatus: ' + self.status + '\ngameId: ' + self.gameId + '\ntimeLoggedIn: ' + self.timeLoggedIn        
 
     '''main methods'''        
     def login(self):
