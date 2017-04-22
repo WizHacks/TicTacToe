@@ -1,7 +1,7 @@
 #import socket module
 #Jia Li 109843894
 from socket import *
-import select
+import select, uuid, board, player, jaw_enums, json
 
 serverSocket = socket(AF_INET, SOCK_STREAM)
 serversocket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
@@ -16,63 +16,98 @@ epoll.register(serverSocket.fileno(), select.EPOLLIN)
 
 class Server(object):
 	def __init__(self):
-		self.players = []
+		self.players = {}
 		self.games = {}
-		self.sockets = {}
+		self.connections = {}
+
+	'''main methods''' 
+	def addConnection(self, connection):
+		'''
+		Add connection new socket connection
+		@param connection the new socket connection
+		'''
+		self.connections[connection.fileno()] = connection
 
 	def playerAvailable(self, username):
-		for p in players:
-			if p.username == username:
-				return p.status
+		'''
+		Checks if player with a user id of username is busy or not
+		@param username User id of user to check for
+		@return True if player is not busy. False otherwise.
+		'''
+		for key, value in self.players.iteritems():
+			if username == value.username
+				return value.status
 		return False
 
 	def playerExists(self, username):
-		for p in players:
-			if p.username == username:
+		'''
+		Checks if player with a user id of username exists
+		@param username User id of user to check for
+		@return True if player exists. False otherwise.
+		'''
+		for key, value in self.players.iteritems():
+			if username == value.username
 				return True
 		return False
 
 	def getPlayers(sef):
+		'''
+		Returns the list of players
+		@return List of players
+		'''
 		names = []
-		for p in players:
-			names.append(p.username)
+		for key, value in self.players.iteritems():
+			names.append(value.username)
 		return names
 
 	def removePlayer(self, username):
-		for p in players:
-			if p.username == username:
-				players.remove(p)
-				return
+		for key, value in self.players.iteritems():
+			if username == value.username:
+				#close connection and remove user
+		return
 
-	def addPlayer(self, player, connection):
+	def addPlayer(self, connection, player):
 		#Store epoll connection and player username in sockets dictionary
-		players.append(player)
+		self.players[connection.fileno()] = player
 
-	def createGame(self, gameID):
+	def createGame(self, connection, p1, p2):
+		gameId = uuid.uuid4().hex
+		newBoard = None
+		if p1.timeLoggedIn <= p2.timeLoggedIn:
+			newBoard = Board(p1, p2, p1)
+		else:
+			newBoard = Board(p1, p2, p2)
+		self.games[gameId] = newBoard
 		return
 
 	def endGame(self, gameID):
 		return
 
-	def sendMessage(message):
+	def sendMessage(self, message, connection):
 		return
 
-	def checkProtocol():
+	def checkProtocol(self, connection):
 		return
 
 if __name__ == '__main__':
-	while True:
-		events = epoll.poll(1)
-		for fileno, event in events:
-			if fileno == serverSocket.fileno():
-				# new epoll connection
-				connectionSocket, addr = serverSocket.accept()
-				connectionSocket.setBlocking(0)
-				epoll.register(connectionSocket.fileno(), select.EPOLLIN)
-			elif event & select.EPOLLIN:
-				#receive client data on epoll connection
-			elif event & select.EPOLLOUT:
-				#send server response on epoll connection
+	try:
+		while True:
+			events = epoll.poll(1)
+			for fileno, event in events:
+				if fileno == serverSocket.fileno():
+					# new epoll connection
+					connectionSocket, addr = serverSocket.accept()
+					connectionSocket.setBlocking(0)
+					epoll.register(connectionSocket.fileno(), select.EPOLLIN)
+					server.createGame(connection)
+				elif event & select.EPOLLIN:
+					#receive client data on epoll connection
+				elif event & select.EPOLLOUT:
+					#send server response on epoll connection
+	finally:
+		epoll.unregister(serversocket.fileno())
+		epoll.close()
+		serversocket.close()
 
 # while True:
 # 	#Establish the connection

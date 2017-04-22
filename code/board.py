@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-class TTTBoard(object):
+class Board(object):
 	def __init__(self, player1, player2, currentPlayer):
 		self.player1 = player1
 		self.player2 = player2
@@ -89,7 +89,7 @@ class TTTBoard(object):
 		self.printBoard()
 
 def test():
-	board = TTTBoard("p1", "p2", "p1") 
+	board = Board("p1", "p2", "p1") 
 	board.place(1)
 	board.place(1)
 	board.place(4)
