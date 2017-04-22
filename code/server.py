@@ -50,10 +50,10 @@ class Server(object):
 				return True
 		return False
 
-	def getPlayers(sef):
+	def getPlayers(self):
 		'''
-		Returns the list of players
-		@return List of players
+		Returns the list of all players
+		@return List of all players
 		'''
 		names = []
 		for key, value in self.players.iteritems():
@@ -61,16 +61,31 @@ class Server(object):
 		return names
 
 	def removePlayer(self, username):
+		'''
+		Removes the player with a user id of username
+		@param usernamed User id of user to remove
+		'''
 		for key, value in self.players.iteritems():
 			if username == value.username:
 				#close connection and remove user
 		return
 
 	def addPlayer(self, connection, player):
+		'''
+		Adds player to the server
+		@param connection Socket connection associated with player
+		@param player Player to add to the server
+		'''
 		#Store epoll connection and player username in sockets dictionary
 		self.players[connection.fileno()] = player
 
 	def createGame(self, connection, p1, p2):
+		'''
+		Create game with 2 players
+		@param connection Connection associated with p1 or p2
+		@param p1 Player 1
+		@param p2 Player 2
+		'''
 		gameId = uuid.uuid4().hex
 		newBoard = None
 		if p1.timeLoggedIn <= p2.timeLoggedIn:
@@ -81,12 +96,25 @@ class Server(object):
 		return
 
 	def endGame(self, gameID):
+		'''
+		Ends the game
+		@param gameID Game ID of the game to end
+		'''
 		return
 
 	def sendMessage(self, message, connection):
+		'''
+		Sends a message to the client
+		@param message Message to send
+		@param connection Sock connection to send message to
+		'''
 		return
 
 	def checkProtocol(self, connection):
+		'''
+		Checks the protocol
+		@param connection Incoming socket connection
+		'''
 		return
 
 if __name__ == '__main__':
@@ -102,37 +130,11 @@ if __name__ == '__main__':
 					server.createGame(connection)
 				elif event & select.EPOLLIN:
 					#receive client data on epoll connection
+					server.checkProtocol(connection)
 				elif event & select.EPOLLOUT:
 					#send server response on epoll connection
+					connections[fileno].send("Hello")
 	finally:
 		epoll.unregister(serversocket.fileno())
 		epoll.close()
 		serversocket.close()
-
-# while True:
-# 	#Establish the connection
-# 	print 'Ready to serve...'
-# 	connectionSocket, addr = serverSocket.accept()
-# 	try:
-# 		message = connectionSocket.recv(1024)
-# 		filename = message.split()[1]
-# 		f = open(filename[1:])
-# 		outputdata = f.read()
-# 		#Send one HTTP header line into socket
-# 		#Fill in start
-# 		connectionSocket.send('\nHTTP/1.1 200 OK\n\n')
-# 		#Fill in end
-# 		#Send the content of the requested file to the client
-# 		for i in range(0, len(outputdata)):
-# 			connectionSocket.send(outputdata[i])
-# 		connectionSocket.close()
-# 	except IOError:
-# 		#Send response message for file not found
-# 		#Fill in start
-# 		connectionSocket.send('\nHTTP/1.1 404 Not Found\n\n')
-# 		#Fill in end
-# 		#Close client socket
-# 		#Fill in start
-# 		connectionSocket.close()
-# 		#Fill in end
-# serverSocket.close()
