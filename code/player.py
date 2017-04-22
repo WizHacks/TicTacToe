@@ -29,35 +29,41 @@ class Player(object):
 		json_data = json.dumps(self.createPlayerDictionary())        
 		message = JAWMethods.LOGIN + " " + json_data + "\r\n\r\n"
 		self.lastRequestSent = JAWMethods.LOGIN
-		self.sendMessage(message)        
+		self.sendMessage(message)
 
 	def play(self, opponent):
 		'''
 		Send request to server asking to play the specified opponent
 		@param opponent the player we wish to versus
-
 		'''
-
+		message = JAWMethods.PLAY +" " + opponent +" " + "\r\n\r\n"
 		self.lastRequestSent = JAWMethods.PLAY
+		self.sendMessage(message)
 
 	def who(self):
 		'''
 		Send request to server asking for available users         
 		'''
+		message = JAWMethods.WHO + "\r\n\r\n"
 		self.lastRequestSent = JAWMethods.WHO
-		return   
+		self.sendMessage(message)
+		
 		
 	def exit(self):
 		'''
 		Send break up request to server    
 		'''
+		message = JAWMethods.EXIT + "\r\n\r\n"
 		self.lastRequestSent = JAWMethods.EXIT
+		self.sendMessage(message)
 
 	def place(self, move):
 		'''
 		Send request to server to place move at given location         
 		'''
+		message = JAWMethods.PLACE + " " + move + "\r\n\r\n"
 		self.lastRequestSent = JAWMethods.PLACE
+		self.sendMessage(message)
 
 	'''Helper methods'''
 	def makeRequest(self, request):
@@ -71,7 +77,7 @@ class Player(object):
 		Display the current game board state
 		@param board a list of board indices
 		'''
-		print "board"     
+		print "board"
 
 	def sendMessage(self, message):
 		'''
@@ -126,9 +132,9 @@ def help():
 	Prints the help menu
 	'''         
 	print "login [username] \t- logs into a server with unique id.  Force quits if username is already taken"
-	print "place [index]\t[ 1, 2, 3]"
+	print "place [index]\t [ 1, 2, 3]"
 	print "\t\t [ 4, 5, 6]"
-	print "\t\t [ 7, 8, 9]]"
+	print "\t\t [ 7, 8, 9]"
 	print "\t\t\t- place your symbol at the corresponding poisition labeled in grid above"
 	print "exit\t\t\t- quits the program at any time"
 	print "games\t\t\t- obtains a list of all ongoing games along with their respective gameID and players"
@@ -163,7 +169,7 @@ if __name__ == "__main__":
 		player = Player(username, clientSocket)
 
 		# prompt user to log in
-		player.login()    
+		player.login()
 		# dont wait for login response from server, user may wish to exit instead
 		# while loop here
 		# poll stdin and client socket
