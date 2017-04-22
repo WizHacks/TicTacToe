@@ -8,9 +8,8 @@ An online modified version of the game Tic-Tac-Toe using Internet domain sockets
 
 
 ### Running the Program
-- work in progress
-Start the server on a computer__
-Start the client on a computer with arguments corresponding to the host address and port number of the server__
+Start the server on a computer  
+Start the client on a computer with arguments corresponding to the host address and port number of the server  
 ```
 python server.py
 python player.py 127.0.0.1 2017
