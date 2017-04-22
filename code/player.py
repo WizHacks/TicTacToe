@@ -152,8 +152,6 @@ if __name__ == "__main__":
 	try:
 		clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		#clientSocket.connect((serverName,serverPort))
-
-		#while True:
 		print "Input your username: ",
 		sys.stdout.flush()
 		username = raw_input("")
@@ -169,11 +167,22 @@ if __name__ == "__main__":
 		# poll stdin and client socket
 		epoll = select.epoll()
 		epoll.register(clientSocket.fileno(), select.EPOLLIN)
-		
+
+        while True:
+            events = epoll.poll(1) # file no and event code
+            for fileno, event in events:
+                if fileno == clientSocket.fileno():
+                    print "received something from the server, process it"
+                elif events & select.EPOLLIN:
+                    print "received something from stdin"
+                else:
+                    print "Not suppose to print" 
 
 	except socket.error:
 		print "Error connecting to server. Exiting ..."
 	finally:
+        epoll.unregister(clientSocket.fileno())
+        epoll.close()
 		clientSocket.close()
 
 
