@@ -193,8 +193,8 @@ if __name__ == "__main__":
 		        else:
 		            print "Not suppose to print" 
 
-	# except socket.error:
-	# 	print "Error connecting to server. Exiting ..."
+	except socket.error:
+		print "Error connecting to server. Exiting ..."
 	finally:
 		# epoll.unregister(clientSocket.fileno())
 		# epoll.close()
