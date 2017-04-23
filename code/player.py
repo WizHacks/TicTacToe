@@ -2,8 +2,8 @@ from argparse import ArgumentParser
 from jaw_enums import JAWMethods, JAWResponses, JAWStatuses
 import time
 import json
-import socket
-import sys
+import socket, select
+import sys, os, fcntl
 
 
 class Player(object):
@@ -155,9 +155,11 @@ if __name__ == "__main__":
 	serverName = args.serverName
 	serverPort = int(args.serverPort)
 
+	epoll = select.epoll()
+
 	try:
 		clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		#clientSocket.connect((serverName,serverPort))
+		clientSocket.connect((serverName,serverPort))
 		print "Input your username: ",
 		sys.stdout.flush()
 		username = raw_input("")
@@ -171,24 +173,31 @@ if __name__ == "__main__":
 		# dont wait for login response from server, user may wish to exit instead
 		# while loop here
 		# poll stdin and client socket
-		epoll = select.epoll()
+		stdinfd = sys.stdin.fileno()
+		fl = fcntl.fcntl(stdinfd, fcntl.F_GETFL)
+		fcntl.fcntl(stdinfd, fcntl.F_SETFL, fl | os.O_NONBLOCK)
 		epoll.register(clientSocket.fileno(), select.EPOLLIN)
+		epoll.register(stdinfd, select.EPOLLIN)
 
-        while True:
-            events = epoll.poll(1) # file no and event code
-            for fileno, event in events:
-                if fileno == clientSocket.fileno():
-                    print "received something from the server, process it"
-                elif events & select.EPOLLIN:
-                    print "received something from stdin"
-                else:
-                    print "Not suppose to print" 
+		while True:
+		    events = epoll.poll(1) # file no and event code
+		    for fileno, event in events:
+		        if fileno == clientSocket.fileno():
+		            print "received something from the server, process it"	
+		            response = clientSocket.recv(2048)
+		            print response	            
+		        elif fileno == stdinfd:
+		            print "received something from stdin"
+		            userinput = sys.stdin.read(128).strip()
+		            print userinput		        
+		        else:
+		            print "Not suppose to print" 
 
-	except socket.error:
-		print "Error connecting to server. Exiting ..."
+	# except socket.error:
+	# 	print "Error connecting to server. Exiting ..."
 	finally:
-        epoll.unregister(clientSocket.fileno())
-        epoll.close()
+		# epoll.unregister(clientSocket.fileno())
+		# epoll.close()
 		clientSocket.close()
 
 
