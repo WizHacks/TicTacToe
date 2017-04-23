@@ -5,10 +5,12 @@ import json
 import socket, select
 import sys, os, fcntl
 
+global player
+
 
 class Player(object):
 	def __init__(self, username, server, status=True, gameId=0, timeLoggedIn = None):
-		self.username = username  
+		self.username = username
 		self.status = status
 		self.gameId = gameId
 		self.server = server
@@ -18,15 +20,15 @@ class Player(object):
 
 
 	def __str__(self):
-		return 'username: '+ self.username + '\nstatus: ' + self.status + '\ngameId: ' + self.gameId + '\ntimeLoggedIn: ' + self.timeLoggedIn        
+		return 'username: '+ self.username + '\nstatus: ' + str(self.status) + '\ngameId: ' + str(self.gameId) + '\ntimeLoggedIn: ' + self.timeLoggedIn
 
-	'''main methods'''        
+	'''main methods'''
 	def login(self):
 		'''
 		Log the player into the server denoted by server
 		'''
 		print 'Login in progress ...'
-		json_data = json.dumps(self.createPlayerDictionary())        
+		json_data = json.dumps(self.createPlayerDictionary())
 		message = JAWMethods.LOGIN + " " + json_data + "\r\n\r\n"
 		self.lastRequestSent = JAWMethods.LOGIN
 		self.sendMessage(message)
@@ -42,15 +44,15 @@ class Player(object):
 
 	def who(self):
 		'''
-		Send request to server asking for available users         
+		Send request to server asking for available users
 		'''
 		message = JAWMethods.WHO + "\r\n\r\n"
 		self.lastRequestSent = JAWMethods.WHO
 		self.sendMessage(message)
-		
+
 	def exit(self):
 		'''
-		Send break up request to server    
+		Send break up request to server
 		'''
 		message = JAWMethods.EXIT + "\r\n\r\n"
 		self.lastRequestSent = JAWMethods.EXIT
@@ -58,11 +60,12 @@ class Player(object):
 
 	def place(self, move):
 		'''
-		Send request to server to place move at given location         
+		Send request to server to place move at given location
 		'''
 		message = JAWMethods.PLACE + " " + move + "\r\n\r\n"
 		self.lastRequestSent = JAWMethods.PLACE
 		self.sendMessage(message)
+		#print "From place(" + move+ ")"
 
 	'''Helper methods'''
 	def makeRequest(self, request, arg=None):
@@ -100,8 +103,8 @@ class Player(object):
 		playerDictionary['status'] = self.status
 		playerDictionary['gameId'] = self.gameId
 		playerDictionary['timeLoggedIn'] = self.timeLoggedIn
-		return playerDictionary    
-	
+		return playerDictionary
+
 '''utility functions'''
 def processResponse(requestState, response):
 	'''
@@ -110,7 +113,7 @@ def processResponse(requestState, response):
 	@param response response received from the server
 	'''
 	responseList = self.checkProtocol(response)
-	if responseList[0] == JAWResponses.OK and self.requestState == JAWMethods.LOGIN:        
+	if responseList[0] == JAWResponses.OK and self.requestState == JAWMethods.LOGIN:
 		self.timeLoggedIn = time.time()
 		self.isLoggedIn = True
 		print "Logged in successfully at time: ", time.strftime("%b %d %Y %H:%M:%S", time.gmtime(self.timeLoggedIn))
@@ -120,8 +123,28 @@ def processStdin(stdinInput):
 	Process the stdin input and take appropriate action
 	@param stdinInput input received from stdin
 	'''
-	# TO-DO
-	return
+	global player
+	args = stdinInput.split(" ")
+	if args[0] == "help":
+		help()
+	elif args[0] == "login":
+		print "You have already logged in"
+	elif args[0] == "exit":
+		player.exit()
+	elif args[0] == "who":
+		player.who()
+	elif args[0] == "place":
+		if len(args) == 2 and len(args[1]) == 1 and args[1][0] > '0' and args[1][0] <= '9':
+			player.place(args[1][0])
+		else:
+			print "Invalid number of arguments\nExpected: place [index]\t [ 1, 2, 3]"
+			print "\t\t\t [ 4, 5, 6]"
+			print "\t\t\t [ 7, 8, 9]"
+			print "\t\t\t\t- place your symbol at the corresponding poisition labeled in grid above"
+	# elif args[0] == "observe":
+	# 	print "if len(args) == 2"
+	else:
+		print "invalid command "
 
 def checkResponseProtocol(packet):
 	'''
@@ -181,7 +204,7 @@ def checkUsername(username):
 def help():
 	'''
 	Prints the help menu
-	'''         
+	'''
 	print "login [username] \t- logs into a server with unique id.  Force quits if username is already taken"
 	print "place [index]\t [ 1, 2, 3]"
 	print "\t\t [ 4, 5, 6]"
@@ -192,7 +215,7 @@ def help():
 	print "who\t\t\t- obtains a list of all players available to play"
 	print "play [player] \t\t- challenges the specified player if s/he is available to play"
 	print "observe [gameID]\t- tunes into the the specified game"
-	print "unobserve [gameID]\t- stops receiving incoming data about particular game"    
+	print "unobserve [gameID]\t- stops receiving incoming data about particular game"
 
 if __name__ == "__main__":
 	# parse commandline arguments

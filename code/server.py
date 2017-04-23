@@ -20,7 +20,7 @@ class Server(object):
 		self.games = {}
 		self.connections = {}
 
-	'''main methods''' 
+	'''main methods'''
 	def addConnection(self, connection):
 		'''
 		Add connection new socket connection
@@ -57,7 +57,8 @@ class Server(object):
 		'''
 		names = []
 		for key, value in self.players.iteritems():
-			names.append(value.username) if value.status == True
+			if value.status == True:
+				names.append(value.username)
 		return names
 
 	def removePlayer(self, username):
@@ -88,11 +89,7 @@ class Server(object):
 		@param p2 Player 2
 		'''
 		gameId = uuid.uuid4().hex
-		newBoard = None
-		if p1.timeLoggedIn <= p2.timeLoggedIn:
-			newBoard = Board(p1, p2, p1)
-		else:
-			newBoard = Board(p1, p2, p2)
+		newBoard = Board(p1, p2, p1 if p1.timeLoggedIn <= p2.timeLoggedIn else p2)
 		self.games[gameId] = newBoard
 		return
 
@@ -116,6 +113,7 @@ class Server(object):
 		Checks the protocol
 		@param connection Incoming socket connection
 		'''
+		epoll.modify(connection.fileno(), select.EPOLLOUT)
 		return
 
 server = Server()
@@ -128,16 +126,17 @@ if __name__ == '__main__':
 				if fileno == serverSocket.fileno():
 					# new epoll connection
 					connectionSocket, addr = serverSocket.accept()
-					connectionSocket.setBlocking(0)
+					connectionSocket.setblocking(0)
 					epoll.register(connectionSocket.fileno(), select.EPOLLIN)
-					server.createGame(connection)
+					server.addConnection(connectionSocket)
 				elif event & select.EPOLLIN:
 					#receive client data on epoll connection
-					server.checkProtocol(connection)
+					server.checkProtocol(connectionSocket)
 				elif event & select.EPOLLOUT:
 					#send server response on epoll connection
-					connections[fileno].send("Hello")
+					server.connections[fileno].send("HELLO")
+					epoll.modify(fileno, 0)
 	finally:
-		epoll.unregister(serversocket.fileno())
+		epoll.unregister(serverSocket.fileno())
 		epoll.close()
-		serversocket.close()
+		serverSocket.close()
