@@ -104,4 +104,4 @@ def test():
 	board.place(5)
 	board.place(2)
 
-test()
+#test()

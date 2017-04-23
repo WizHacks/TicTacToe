@@ -5,7 +5,7 @@ import select, uuid, board, jaw_enums, json
 #import player
 
 serverSocket = socket(AF_INET, SOCK_STREAM)
-serversocket.setSockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+serverSocket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
 serverPort = 9347
 serverSocket.bind(('', serverPort))
 serverSocket.listen(1)
@@ -50,14 +50,14 @@ class Server(object):
 				return True
 		return False
 
-	def getPlayers(self):
+	def getAvailablePlayers(self):
 		'''
-		Returns the list of all players
-		@return List of all players
+		Returns the list of all available players
+		@return List of all available players
 		'''
 		names = []
 		for key, value in self.players.iteritems():
-			names.append(value.username)
+			names.append(value.username) if value.status == True
 		return names
 
 	def removePlayer(self, username):
