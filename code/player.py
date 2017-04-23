@@ -5,6 +5,8 @@ import json
 import socket, select
 import sys, os, fcntl
 
+global player
+
 
 class Player(object):
 	def __init__(self, username, server, status=True, gameId=0, timeLoggedIn = None):
@@ -18,7 +20,7 @@ class Player(object):
 
 
 	def __str__(self):
-		return 'username: '+ self.username + '\nstatus: ' + self.status + '\ngameId: ' + self.gameId + '\ntimeLoggedIn: ' + self.timeLoggedIn
+		return 'username: '+ self.username + '\nstatus: ' + str(self.status) + '\ngameId: ' + str(self.gameId) + '\ntimeLoggedIn: ' + self.timeLoggedIn
 
 	'''main methods'''
 	def login(self):
@@ -64,6 +66,7 @@ class Player(object):
 		message = JAWMethods.PLACE + " " + move + "\r\n\r\n"
 		self.lastRequestSent = JAWMethods.PLACE
 		self.sendMessage(message)
+		#print "From place(" + move+ ")"
 
 	'''Helper methods'''
 	def makeRequest(self, request):
@@ -113,6 +116,33 @@ def processStdin(stdinInput):
 	Process the stdin input and take appropriate action
 	@param stdinInput input received from stdin
 	'''
+	global player
+	args = stdinInput.split(" ")
+	if args[0] == "help":
+		help()
+	elif args[0] == "login":
+		print "You have already logged in"
+	elif args[0] == "exit":
+		player.exit()
+	elif args[0] == "who":
+		player.who()
+	elif args[0] == "place":
+		if len(args) == 2 and len(args[1]) == 1 and args[1][0] > '0' and args[1][0] <= '9':
+			player.place(args[1][0])
+		else:
+			print "Invalid number of arguments\nExpected: place [index]\t [ 1, 2, 3]"
+			print "\t\t\t [ 4, 5, 6]"
+			print "\t\t\t [ 7, 8, 9]"
+			print "\t\t\t\t- place your symbol at the corresponding poisition labeled in grid above"
+	# elif args[0] == "observe":
+	# 	print "if len(args) == 2"
+	else:
+		print "invalid command "
+
+
+
+
+
 	return
 
 def checkProtocol(packet):
@@ -187,9 +217,10 @@ if __name__ == "__main__":
 					response = clientSocket.recv(2048)
 					print response
 				elif fileno == stdinfd:
-					print "received something from stdin"
+					#print "received something from stdin"
 					userinput = sys.stdin.read(128).strip()
-					print userinput
+					#print userinput
+					processStdin(userinput)
 				else:
 					print "Not suppose to print"
 
