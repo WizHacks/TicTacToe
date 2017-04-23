@@ -22,6 +22,11 @@ class JAWStatuses(object):
 	GAME_END = "GAME END"
 	USER_QUIT = "USER QUIT"
 
+class JAWMisc(object):
+	CRNLCRNL = "\r\n\r\n"
+	CRNL = "\r\n"
+	JAW = "JAW/1.0"
+
 if __name__ == "__main__":
 	request = JAWMethods.LOGIN
 	print request
