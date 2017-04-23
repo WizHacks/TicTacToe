@@ -22,6 +22,16 @@ class JAWStatuses(object):
 	GAME_END = "GAME END"
 	USER_QUIT = "USER QUIT"
 
+class JAWStatusNum(object):
+	OK_NUM = "200"
+	ERROR_NUM = "ERROR"
+	USERNAME_NUM = "USERNAME TAKEN"
+	USER_BUSY_NUM = "USER BUSY"
+	USER_NOT_FOUND_NUM = "USER NOT FOUND"
+	INVALID_MOVE_NUM = "INVALID MOVE"
+	GAME_END_NUM = "GAME END"
+	USER_QUIT_NUM = "USER QUIT"
+
 class JAWMisc(object):
 	CRNLCRNL = "\r\n\r\n"
 	CRNL = "\r\n"
