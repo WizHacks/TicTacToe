@@ -1,15 +1,15 @@
 #import socket module
 #Jia Li 109843894
 from socket import *
-import select, uuid, board, player, jaw_enums, json
+import select, uuid, board, jaw_enums, json
+#import player
 
 serverSocket = socket(AF_INET, SOCK_STREAM)
-serversocket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+serversocket.setSockopt(SOL_SOCKET, SO_REUSEADDR, 1)
 serverPort = 9347
 serverSocket.bind(('', serverPort))
 serverSocket.listen(1)
-serversocket.setblocking(0)
-Server server = Server()
+serverSocket.setblocking(0)
 
 epoll = select.epoll()
 epoll.register(serverSocket.fileno(), select.EPOLLIN)
@@ -35,7 +35,7 @@ class Server(object):
 		@return True if player is not busy. False otherwise.
 		'''
 		for key, value in self.players.iteritems():
-			if username == value.username
+			if username == value.username:
 				return value.status
 		return False
 
@@ -46,7 +46,7 @@ class Server(object):
 		@return True if player exists. False otherwise.
 		'''
 		for key, value in self.players.iteritems():
-			if username == value.username
+			if username == value.username:
 				return True
 		return False
 
@@ -68,6 +68,7 @@ class Server(object):
 		for key, value in self.players.iteritems():
 			if username == value.username:
 				#close connection and remove user
+				return
 		return
 
 	def addPlayer(self, connection, player):
@@ -116,6 +117,8 @@ class Server(object):
 		@param connection Incoming socket connection
 		'''
 		return
+
+server = Server()
 
 if __name__ == '__main__':
 	try:
