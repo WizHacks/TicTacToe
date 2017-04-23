@@ -8,7 +8,7 @@ import sys, os, fcntl
 
 class Player(object):
 	def __init__(self, username, server, status=True, gameId=0, timeLoggedIn = None):
-		self.username = username  
+		self.username = username
 		self.status = status
 		self.gameId = gameId
 		self.server = server
@@ -18,15 +18,15 @@ class Player(object):
 
 
 	def __str__(self):
-		return 'username: '+ self.username + '\nstatus: ' + self.status + '\ngameId: ' + self.gameId + '\ntimeLoggedIn: ' + self.timeLoggedIn        
+		return 'username: '+ self.username + '\nstatus: ' + self.status + '\ngameId: ' + self.gameId + '\ntimeLoggedIn: ' + self.timeLoggedIn
 
-	'''main methods'''        
+	'''main methods'''
 	def login(self):
 		'''
 		Log the player into the server denoted by server
 		'''
 		print 'Login in progress ...'
-		json_data = json.dumps(self.createPlayerDictionary())        
+		json_data = json.dumps(self.createPlayerDictionary())
 		message = JAWMethods.LOGIN + " " + json_data + "\r\n\r\n"
 		self.lastRequestSent = JAWMethods.LOGIN
 		self.sendMessage(message)
@@ -42,16 +42,16 @@ class Player(object):
 
 	def who(self):
 		'''
-		Send request to server asking for available users         
+		Send request to server asking for available users
 		'''
 		message = JAWMethods.WHO + "\r\n\r\n"
 		self.lastRequestSent = JAWMethods.WHO
 		self.sendMessage(message)
-		
-		
+
+
 	def exit(self):
 		'''
-		Send break up request to server    
+		Send break up request to server
 		'''
 		message = JAWMethods.EXIT + "\r\n\r\n"
 		self.lastRequestSent = JAWMethods.EXIT
@@ -59,7 +59,7 @@ class Player(object):
 
 	def place(self, move):
 		'''
-		Send request to server to place move at given location         
+		Send request to server to place move at given location
 		'''
 		message = JAWMethods.PLACE + " " + move + "\r\n\r\n"
 		self.lastRequestSent = JAWMethods.PLACE
@@ -93,8 +93,8 @@ class Player(object):
 		playerDictionary['status'] = self.status
 		playerDictionary['gameId'] = self.gameId
 		playerDictionary['timeLoggedIn'] = self.timeLoggedIn
-		return playerDictionary    
-	
+		return playerDictionary
+
 '''utility functions'''
 def processResponse(requestState, response):
 	'''
@@ -103,7 +103,7 @@ def processResponse(requestState, response):
 	@param response response received from the server
 	'''
 	responseList = self.checkProtocol(response)
-	if responseList[0] == JAWResponses.OK and self.requestState == JAWMethods.LOGIN:        
+	if responseList[0] == JAWResponses.OK and self.requestState == JAWMethods.LOGIN:
 		self.timeLoggedIn = time.time()
 		self.isLoggedIn = True
 		print "Logged in successfully at time: ", time.strftime("%b %d %Y %H:%M:%S", time.gmtime(self.timeLoggedIn))
@@ -130,7 +130,7 @@ def checkUsername(username):
 def help():
 	'''
 	Prints the help menu
-	'''         
+	'''
 	print "login [username] \t- logs into a server with unique id.  Force quits if username is already taken"
 	print "place [index]\t [ 1, 2, 3]"
 	print "\t\t [ 4, 5, 6]"
@@ -141,7 +141,7 @@ def help():
 	print "who\t\t\t- obtains a list of all players available to play"
 	print "play [player] \t\t- challenges the specified player if s/he is available to play"
 	print "observe [gameID]\t- tunes into the the specified game"
-	print "unobserve [gameID]\t- stops receiving incoming data about particular game"    
+	print "unobserve [gameID]\t- stops receiving incoming data about particular game"
 
 if __name__ == "__main__":
 	# parse commandline arguments
@@ -180,18 +180,18 @@ if __name__ == "__main__":
 		epoll.register(stdinfd, select.EPOLLIN)
 
 		while True:
-		    events = epoll.poll(1) # file no and event code
-		    for fileno, event in events:
-		        if fileno == clientSocket.fileno():
-		            print "received something from the server, process it"	
-		            response = clientSocket.recv(2048)
-		            print response	            
-		        elif fileno == stdinfd:
-		            print "received something from stdin"
-		            userinput = sys.stdin.read(128).strip()
-		            print userinput		        
-		        else:
-		            print "Not suppose to print" 
+			events = epoll.poll(1) # file no and event code
+			for fileno, event in events:
+				if fileno == clientSocket.fileno():
+					print "received something from the server, process it"
+					response = clientSocket.recv(2048)
+					print response
+				elif fileno == stdinfd:
+					print "received something from stdin"
+					userinput = sys.stdin.read(128).strip()
+					print userinput
+				else:
+					print "Not suppose to print"
 
 	except socket.error:
 		print "Error connecting to server. Exiting ..."

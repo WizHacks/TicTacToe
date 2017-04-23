@@ -20,7 +20,7 @@ class Server(object):
 		self.games = {}
 		self.connections = {}
 
-	'''main methods''' 
+	'''main methods'''
 	def addConnection(self, connection):
 		'''
 		Add connection new socket connection
@@ -89,11 +89,7 @@ class Server(object):
 		@param p2 Player 2
 		'''
 		gameId = uuid.uuid4().hex
-		newBoard = None
-		if p1.timeLoggedIn <= p2.timeLoggedIn:
-			newBoard = Board(p1, p2, p1)
-		else:
-			newBoard = Board(p1, p2, p2)
+		newBoard = Board(p1, p2, p1 if p1.timeLoggedIn <= p2.timeLoggedIn else p2)
 		self.games[gameId] = newBoard
 		return
 
@@ -135,7 +131,7 @@ if __name__ == '__main__':
 					server.addConnection(connectionSocket)
 				elif event & select.EPOLLIN:
 					#receive client data on epoll connection
-					server.checkProtocol(connectionSocket)	
+					server.checkProtocol(connectionSocket)
 				elif event & select.EPOLLOUT:
 					#send server response on epoll connection
 					server.connections[fileno].send("HELLO")
