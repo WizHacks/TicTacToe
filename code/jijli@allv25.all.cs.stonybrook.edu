@@ -138,16 +138,16 @@ class Server(object):
 			sendMessage("JAW/1.0 400 ERROR \r\n", connection)
 			epoll.modify(fileno, select.EPOLLOUT)
 			return
-		request = request.split()
-		if request[0] == "LOGIN":
+		request = request.splice()
+		if request[1] == "LOGIN":
 			if len(request) < 3:
 				sendMessage("JAW/1.0 400 ERROR \r\n", connection)
 			else:
 				#request[2] is a json
-				if playerExists(request[1].username):
+				if playerExists(request[2].username):
 					sendMessage("JAW/1.0 401 OK \r\n", connection)
 				else:
-					addPlayer(connection, request[1])
+					addPlayer(connection, request[2])
 					sendMessage("JAW/1.0 200 OK \r\n", connection)
 		# elif request[1] == "PLACE":
 
@@ -177,28 +177,13 @@ if __name__ == '__main__':
 					server.addConnection(connectionSocket)
 				elif event & select.EPOLLIN:
 					#receive client data on epoll connection
-					str1 = server.connections[fileno].recv(1024)#.strip()
-					if (len(str1) == 0):
-						fNum = fileno
-						epoll.unregister(fileno)
-						server.connections[fNum].close()
-						del server.connections[fNum]
-					str2 = str1[str1.find(" ") + 1:len(str1)]
-					print str2
-					#print json.loads(str1[1])
+					print server.connections[fileno].recv(1024)
 					#server.checkProtocol(fileno)	
 				# elif event & select.EPOLLOUT:
 				# 	#send server response on epoll connection
 				# 	server.connections[fileno].send("HELLO")
 				# 	epoll.modify(fileno, 0)
-				elif event & select.EPOLLHUP:
-					fNum = fileno
-					epoll.unregister(fileno)
-					server.connections[fNum].close()
-					del server.connections[fNum]
 	finally:
 		epoll.unregister(serverSocket.fileno())
 		epoll.close()
 		serverSocket.close()
-#scp -P 130 server.py jijli@allv25.all.cs.stonybrook.edu:~
-#ssh -p 130 jijli@allv25.all.cs.stonybrook.edu
