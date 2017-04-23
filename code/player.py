@@ -1,5 +1,5 @@
 from argparse import ArgumentParser
-from jaw_enums import JAWMethods, JAWResponses, JAWStatuses
+from jaw_enums import JAWMethods, JAWResponses, JAWStatuses, JAWMisc
 import time
 import json
 import socket, select
@@ -48,7 +48,6 @@ class Player(object):
 		self.lastRequestSent = JAWMethods.WHO
 		self.sendMessage(message)
 		
-		
 	def exit(self):
 		'''
 		Send break up request to server    
@@ -66,17 +65,26 @@ class Player(object):
 		self.sendMessage(message)
 
 	'''Helper methods'''
-	def makeRequest(self, request):
+	def makeRequest(self, request, arg=None):
 		if request == JAWMethods.LOGIN:
 			self.login()
+		elif request == JAWMethods.PLAY:
+			self.play(arg)
+		elif request == JAWMethods.WHO:
+			self.who()
+		elif request == JAWMethods.PLACE:
+			self.place(arg)
+		elif request == JAWMethods.EXIT:
+			self.exit()
 		else:
-			print "finish writing rest of code"
+			print "No such request!"
 
 	def printBoard(self, board):
 		'''
 		Display the current game board state
 		@param board a list of board indices
 		'''
+		# TO-DO
 		print "board"
 
 	def sendMessage(self, message):
@@ -85,7 +93,6 @@ class Player(object):
 		@param message the message to send to server
 		'''
 		clientSocket.send(message)
-		return
 
 	def createPlayerDictionary(self):
 		playerDictionary = {}
@@ -113,15 +120,59 @@ def processStdin(stdinInput):
 	Process the stdin input and take appropriate action
 	@param stdinInput input received from stdin
 	'''
+	# TO-DO
 	return
 
-def checkProtocol(packet):
+def checkResponseProtocol(packet):
 	'''
 	Checks to see if response from server is valid protocol
-	Raise an exception if it does not
 	@return list of extracted protocol details
 	'''
-	return True
+	statusCodes = [JAWStatuses.OK, JAWStatuses.ERROR, JAWStatuses.USERNAME_TAKEN,
+				JAWStatuses.USER_BUSY, JAWStatuses.USER_NOT_FOUND, JAWStatuses.INVALID_MOVE, JAWStatuses.GAME_END, JAWStatuses.USER_QUIT]
+	statusBodies = [JAWResponses.Print, JAWResponses.PLAYER, JAWResponses.WINNER, JAWResponses.PLAYERS, JAWResponses.QUIT]
+	
+	if packet.count(JAWMisc.CRNLCRNL) == 1:
+		if packet.count(JAWMisc.CRNL) == 1:
+			args.packet.strip.split()
+			if len(args) != 4:
+				print "Invalid protocol format ... ignored"
+				return []
+			else:
+				if args[0] != JAWMisc.JAW:
+					print "Invalid protocol format ... ignored"
+					return []
+				try:
+					int(args[1])
+				except ValueError:
+					print "Invalid protocol format ... ignored"
+					return []		
+				if args[2] not in statusCodes:
+					print "Invalid protocol format ... ignored"
+					return []
+				body = args[3][args[3].find(":") +1:]
+				if body not in statusBodies:
+					print "Invalid protocol format ... ignored"
+					return []
+		else:		 
+			args = packet.strip().split()
+			if len(args) != 3:
+				print "Invalid protocol format ... ignored"
+				return []
+			if args[0] != JAWMisc.JAW:
+					print "Invalid protocol format ... ignored"
+					return []
+			try:
+				int(args[1])
+			except ValueError:
+				print "Invalid protocol format ... ignored"
+				return []
+			
+			if args[2] not in statusCodes:
+				print "Invalid protocol format ... ignored"
+				return []						
+		print ags
+		return args
 
 def checkUsername(username):
 	'''Determine whether the username is valid or not'''
@@ -185,11 +236,15 @@ if __name__ == "__main__":
 		        if fileno == clientSocket.fileno():
 		            print "received something from the server, process it"	
 		            response = clientSocket.recv(2048)
-		            print response	            
+		            print response	    
+		            args = checkResponseProtocol(response)  
+		            if len(args) != 0:
+		            	processResponse(args)     
 		        elif fileno == stdinfd:
 		            print "received something from stdin"
 		            userinput = sys.stdin.read(128).strip()
-		            print userinput		        
+		            print userinput		    
+		            processStdin(userinput)    
 		        else:
 		            print "Not suppose to print" 
 
