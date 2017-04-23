@@ -117,32 +117,32 @@ def processResponse(requestState, response):
 		self.isLoggedIn = True
 		print "Logged in successfully at time: ", time.strftime("%b %d %Y %H:%M:%S", time.gmtime(self.timeLoggedIn))
 
-	# What happens if server sends me 400? 
+	# What happens if server sends me 400?
 	if responseList[1] == JAWStatusNum.ERROR_NUM and responseList[2] == JAWResponses.ERROR:
 		print "Server sent a 400 ERROR"
 
 	# TO-DO	need to test on server
-	if responseList[1] == JAWStatusNum.USERNAME_TAKEN_NUM and responseList[2] == JAWResponses.USERNAME_TAKEN and self.requestState == JAWMethods.LOGIN:	
+	if responseList[1] == JAWStatusNum.USERNAME_TAKEN_NUM and responseList[2] == JAWResponses.USERNAME_TAKEN and self.requestState == JAWMethods.LOGIN:
 		return JAWMethods.LOGIN
 
-	# TO-DO	
-	if responseList[1] == JAWStatusNum.USER_BUSY_NUM and responseList[2] == JAWResponses.USER_BUSY and self.requestState == JAWMethods.PLAY:	
-		return None
-		
 	# TO-DO
-	if responseList[1] == JAWStatusNum.USER_NOT_FOUND_NUM and responseList[2] == JAWResponses.USER_NOT_FOUND and self.requestState == JAWMethods.PLAY:	
+	if responseList[1] == JAWStatusNum.USER_BUSY_NUM and responseList[2] == JAWResponses.USER_BUSY and self.requestState == JAWMethods.PLAY:
 		return None
 
 	# TO-DO
-	if responseList[1] == JAWStatusNum.INVALID_MOVE_NUM and responseList[2] == JAWResponses.INVALID_MOVE and self.requestState == JAWMethods.PLACE:	
-		return None	
+	if responseList[1] == JAWStatusNum.USER_NOT_FOUND_NUM and responseList[2] == JAWResponses.USER_NOT_FOUND and self.requestState == JAWMethods.PLAY:
+		return None
 
 	# TO-DO
-	if responseList[1] == JAWStatusNum.GAME_END_NUM and responseList[2] == JAWResponses.GAME_END:	
+	if responseList[1] == JAWStatusNum.INVALID_MOVE_NUM and responseList[2] == JAWResponses.INVALID_MOVE and self.requestState == JAWMethods.PLACE:
+		return None
+
+	# TO-DO
+	if responseList[1] == JAWStatusNum.GAME_END_NUM and responseList[2] == JAWResponses.GAME_END:
 		return None	# this means someone won
 
 	# TO-DO
-	if responseList[1] == JAWStatusNum.USER_QUIT_NUM and responseList[2] == JAWResponses.USER_QUIT and self.requestState == JAWMethods.QUIT:	
+	if responseList[1] == JAWStatusNum.USER_QUIT_NUM and responseList[2] == JAWResponses.USER_QUIT and self.requestState == JAWMethods.QUIT:
 		return None	# this means we quit
 
 def processStdin(stdinInput):
@@ -157,7 +157,7 @@ def processStdin(stdinInput):
 	elif args[0] == "login" or not player.isLoggedIn:
 		if player.isLoggedIn:
 			print "You have already logged in"
-		else:			
+		else:
 			while True:
 				username = raw_input("")
 				if not checkUsername(username):
@@ -206,7 +206,7 @@ def checkResponseProtocol(packet):
 					int(args[1])
 				except ValueError:
 					print "Invalid protocol format ... ignored"
-					return []		
+					return []
 				if args[2] not in statusCodes:
 					print "Invalid protocol format ... ignored"
 					return []
@@ -214,7 +214,7 @@ def checkResponseProtocol(packet):
 				if body not in statusBodies:
 					print "Invalid protocol format ... ignored"
 					return []
-		else:		 
+		else:
 			args = packet.strip().split()
 			if len(args) != 3:
 				print "Invalid protocol format ... ignored"
@@ -227,10 +227,10 @@ def checkResponseProtocol(packet):
 			except ValueError:
 				print "Invalid protocol format ... ignored"
 				return []
-			
+
 			if args[2] not in statusCodes:
 				print "Invalid protocol format ... ignored"
-				return []						
+				return []
 	print args
 	return args
 
@@ -273,11 +273,11 @@ if __name__ == "__main__":
 	if not checkUsername(username):
 		print "Username must not contain any spaces!"
 		exit(1)
-	
+
 	try:
 		clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		clientSocket.connect((serverName,serverPort))
-		
+
 		player = Player(username, clientSocket)
 
 		# prompt user to log in
@@ -290,39 +290,43 @@ if __name__ == "__main__":
 		fcntl.fcntl(stdinfd, fcntl.F_SETFL, fl | os.O_NONBLOCK)
 		epoll.register(clientSocket.fileno(), select.EPOLLIN)
 		epoll.register(stdinfd, select.EPOLLIN)
-	except socket.error:		
+	except socket.error:
 		print "Error connecting to server. Exiting ..."
 		exit(1)
 
 	try:
 		while True:
-		    events = epoll.poll(1) # file no and event code
-		    for fileno, event in events:
-		        if fileno == clientSocket.fileno():
-		            print "received something from the server, process it"	
-		            response = clientSocket.recv(2048)
-		            print response	    
-		            args = checkResponseProtocol(response)  
-		            if len(args) != 0:
-		            	action = processResponse(args)   
-		            	if action != None: 
-		            		if action == JAWMethods.LOGIN:
-		            			print "Username %s already taken, please try again:" %(player.username)
-		            		else:
-		            			player.makeRequest(action)
-		        elif fileno == stdinfd:
-		            print "received something from stdin"
-		            userinput = sys.stdin.read(128).strip()
-		            print userinput		    
-		            processStdin(userinput)    
-		        else:
-		            print "Not suppose to print" 
-	except Error:
-		print Error 
+			events = epoll.poll(1) # file no and event code
+			for fileno, event in events:
+				if event & select.EPOLLHUP:
+					epoll.unregister(fileno)
+					epoll.unregister(stdinfd)
+					epoll.close()
+					clientSocket.close()
+					print "Lost connection to server\n Exiting..."
+					exit(1)
+				if fileno == clientSocket.fileno():
+					print "received something from the server, process it"
+					response = clientSocket.recv(2048)
+					print response
+					if len(response) == 0:
+						print "Lost connection to server\n Exiting..."
+						exit(1)
+					args = checkResponseProtocol(response)
+					if len(args) != 0:
+						processResponse(args)
+				elif fileno == stdinfd:
+					print "received something from stdin"
+					userinput = sys.stdin.read(128).strip()
+					print userinput
+					processStdin(userinput)
+				else:
+					print "Not suppose to print"
+
+	except socket.error:
+		print "Error connecting to server. Exiting ..."
 	finally:
 		epoll.unregister(clientSocket.fileno())
 		epoll.unregister(stdinfd)
 		epoll.close()
 		clientSocket.close()
-
-
