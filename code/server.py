@@ -80,35 +80,44 @@ class Server(object):
 		'''
 		self.players[connection.fileno()] = player
 
-	def createGame(self, connection, p1, p2):
+	def createGame(self, p1, p2):
 		'''
 		Create game with 2 players
-		@param connection Connection associated with p1 or p2
 		@param p1 Player 1
 		@param p2 Player 2
+		@return game Object of the new game board created
 		'''
 		gameId = uuid.uuid4().hex
-		newBoard = Board(p1, p2, p1 if p1.timeLoggedIn <= p2.timeLoggedIn else p2)
+		newBoard = Board(p1, p2, p1)
 		self.games[gameId] = newBoard
 		p1.gameId = gameId
 		p2.gameId = gameId
-		return
+		p1.status = False
+		p2.status = False
+		return newBoard
 
-	def endGame(self, gameID):
+	def endGame(self, gameID, p1, p2):
 		'''
 		Ends the game
 		@param gameID Game ID of the game to end
+		@param p1 Player1 
+		@param p2 Player2
 		'''
+		del games[gameId]
+		p1.gameId = None
+		p2.gameId = None
+		p1.status = True
+		p2.status = True
 		return
 
-	def sendMessage(self, message, connection):
+	def sendMessage(self, message, fileno):
 		'''
 		Sends a message to the client
 		@param message Message to send
 		@param connection Sockwt connection to send message to
 		'''
-		connections[connection.fileno()].send("message")
-		epoll.modify(connection.fileno(), 0)
+		connections[fileno].send("message")
+		epoll.modify(fileno, 0)
 		return
 
 
@@ -120,7 +129,7 @@ class Server(object):
 		'''
 		for c in connections:
 			sendMessage(message, c)
-
+		return
 
 	def checkRequestProtocol(self, fileno):
 		'''
@@ -128,35 +137,107 @@ class Server(object):
 		@param fileno Incoming socket connection file descriptor
 		'''
 		connection = self.connections[fileno]
-		request = self.connections[fileno].recv(1024)
+		request = connection.recv(1024)
 		recurr = request.count('\r\n\r\n')
 		if recurr == 0 or recurr > 1:
-			sendMessage("JAW/1.0 400 ERROR \r\n", connection)
+			sendMessage("JAW/1.0 400 ERROR \r\n", fileno)
 			epoll.modify(fileno, select.EPOLLOUT)
 			return
 		request = request.split()
+		# LOGIN
 		if request[0] == "LOGIN":
 			if len(request) < 3:
-				sendMessage("JAW/1.0 400 ERROR \r\n", connection)
+				sendMessage("JAW/1.0 400 ERROR \r\n", fileno)
 			else:
 				#request[2] is a json
 				if playerExists(request[1].username):
-					sendMessage("JAW/1.0 401 OK \r\n", connection)
+					sendMessage("JAW/1.0 401 USERNAME_TAKEN \r\n", fileno)
 				else:
 					addPlayer(connection, request[1])
-					sendMessage("JAW/1.0 200 OK \r\n", connection)
-		# elif request[1] == "PLACE":
-
-		# elif request[1] == "PLAY":
-
-		# elif request[1] == "EXIT":
-
-		# elif request[1] == "WHO":
-
+					sendMessage("JAW/1.0 200 OK \r\n", fileno)
+		# PLACE
+		elif request[1] == "PLACE":
+			currentPlayer = players[fileno]
+			currentGame = games[currentPlayer.gameId]
+			validMove = currentGame.place(int(request[2]))
+			if validMove:
+				otherPlayer = currentGame.currentPlayer
+				broadcast("JAW/1.0 200 OK \r\n " + currentGame + "\r\n\r\n", [fileno, getSocket(otherPlayer)])
+				results = currentGame.gameFinished()
+				if results != None:
+					broadcast("JAW/1.0 201 GAME_END \r\n WINNER:" + results + "\r\n\r\n", [fileno, getSocket(otherPlayer)])
+					endGame(currentPlayer.gameId, currentPlayer, otherPlayer)
+			else:
+				sendMessage("JAW/1.0 405 Invalid_Move \r\n", fileno)
+		# PLAY
+		elif request[1] == "PLAY":
+			otherPlayer = getPlayer(request[2])
+			if otherPlayer == None:
+				sendMessage("JAW/1.0 403 USER_NOT_FOUND \r\n", fileno)
+			else:
+				if playerAvailable(otherPlayer.username):
+					game = createGame(player[fileno], otherPlayer)
+					broadcast("JAW/1.0 200 OK \r\n " + game + "\r\n\r\n", [fileno, getSocket(otherPlayer)])
+				else:
+					sendMessage("JAW/1.0 402 USER_BUSY \r\n", fileno)
+		# EXIT
+		elif request[1] == "EXIT":
+			currentPlayer = players[fileno]
+			# Player is not in game
+			if currentPlayer.status == True:
+				fNum = fileno
+				epoll.unregister(fileno)
+				connections[fNum].close()
+				del connections[fNum]
+				del players[fNum]
+				sendMessage("JAW/1.0 202 USER_QUIT \r\n QUIT:" + currentPlayer.username + "\r\n\r\n", fileno)
+			# Player is in game
+			else:
+				currentGame = games[currentPlayer.gameId]
+				otherPlayer = currentGame.player2 if currentPlayer.username != currentGame.player2 else currentPlayer.username
+				del games[currentPlayer.gameId]
+				broadcast("JAW/1.0 202 USER_QUIT \r\n QUIT:" + currentPlayer.username + "\r\n\r\n", fileno)
+				broadcast("JAW/1.0 201 GAME_END \r\n WINNER:" + otherPlayer.username + "\r\n\r\n", [fileno, getSocket(otherPlayer)])
+				otherPlayer.gameId = None
+				fNum = fileno
+				epoll.unregister(fileno)
+				connections[fNum].close()
+				del connections[fNum]
+				del players[fNum]
+		# WHO
+		elif request[1] == "WHO":
+			players = getAvailablePlayers()
+			data = "JAW/1.0 200 OK \r\n PLAYERS:"
+			for p in players:
+				if p.username != players[fileno].username:
+					data += p.username + ","
+			sendMessage(data[:(len(data)-1)] + "\r\n\r\n", fileno)
 		else:
-			sendMessage("JAW/1.0 400 ERROR \r\n", connection)
+			sendMessage("JAW/1.0 400 ERROR \r\n", fileno)
 		epoll.modify(fileno, select.EPOLLOUT)
 		return
+
+
+	'''helper methods'''
+	def getSocket(self, username):
+		'''
+		Gets the socket of player with id of username
+		@param username id of the player
+		'''
+		for key, value in self.players.iteritems():
+			if username == value.username:
+				return key
+		return None
+
+	def getPlayer(self, username):
+		'''
+		Gets the player with id of username
+		@param username id of the player
+		'''
+		for key, value in self.players.iteritems():
+			if username == value.username:
+				return value
+		return None
 
 server = Server()
 
@@ -181,7 +262,7 @@ if __name__ == '__main__':
 						del server.connections[fNum]
 					str2 = str1[str1.find(" ") + 1:len(str1)]
 					print str2
-					#print json.loads(str1[1])
+					print json.loads(str2)
 					#server.checkProtocol(fileno)	
 				# elif event & select.EPOLLOUT:
 				# 	#send server response on epoll connection
