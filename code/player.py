@@ -38,7 +38,8 @@ class Player(object):
 		Send request to server asking to play the specified opponent
 		@param opponent the player we wish to versus
 		'''
-		message = JAWMethods.PLAY +" " + opponent +" " + "\r\n\r\n"
+		message = JAWMethods.PLAY + " " + opponent +" " + "\r\n\r\n"
+		self.opponent = opponent
 		self.lastRequestSent = JAWMethods.PLAY
 		self.sendMessage(message)
 
@@ -105,16 +106,16 @@ class Player(object):
 		return playerDictionary
 
 '''utility functions'''
-def processResponse(requestState, response):
+def processResponse(player, response):
 	'''
 	Process the response message returned by the server and take appropriate action
 	@param requestState player request state
 	@param response response received from the server
 	'''
-	responseList = self.checkProtocol(response)
-	if responseList[1] == JAWStatusNum.OK_NUM and responseList[2] == JAWResponses.OK and self.requestState == JAWMethods.LOGIN:
-		self.timeLoggedIn = time.time()
-		self.isLoggedIn = True
+	responseList = checkProtocol(response)
+	if responseList[1] == JAWStatusNum.OK_NUM and responseList[2] == JAWResponses.OK and player.requestState == JAWMethods.LOGIN:
+		player.timeLoggedIn = time.time()
+		player.isLoggedIn = True
 		print "Logged in successfully at time: ", time.strftime("%b %d %Y %H:%M:%S", time.gmtime(self.timeLoggedIn))
 
 	# What happens if server sends me 400?
@@ -122,20 +123,21 @@ def processResponse(requestState, response):
 		print "Server sent a 400 ERROR"
 
 	# TO-DO	need to test on server
-	if responseList[1] == JAWStatusNum.USERNAME_TAKEN_NUM and responseList[2] == JAWResponses.USERNAME_TAKEN and self.requestState == JAWMethods.LOGIN:
+	if responseList[1] == JAWStatusNum.USERNAME_TAKEN_NUM and responseList[2] == JAWResponses.USERNAME_TAKEN and player.requestState == JAWMethods.LOGIN:
 		print "Username as been taken, please enter another name:"
-		return JAWMethods.LOGIN
+		return JAWMethods.LOGIN.lower()
 
 	# TO-DO
-	if responseList[1] == JAWStatusNum.USER_BUSY_NUM and responseList[2] == JAWResponses.USER_BUSY and self.requestState == JAWMethods.PLAY:
+	if responseList[1] == JAWStatusNum.USER_BUSY_NUM and responseList[2] == JAWResponses.USER_BUSY and player.requestState == JAWMethods.PLAY:
+		print "Opponent %s is busy!" %(player.opponent)
 		return None
 
 	# TO-DO
-	if responseList[1] == JAWStatusNum.USER_NOT_FOUND_NUM and responseList[2] == JAWResponses.USER_NOT_FOUND and self.requestState == JAWMethods.PLAY:
+	if responseList[1] == JAWStatusNum.USER_NOT_FOUND_NUM and responseList[2] == JAWResponses.USER_NOT_FOUND and player.requestState == JAWMethods.PLAY:
 		return None
 
 	# TO-DO
-	if responseList[1] == JAWStatusNum.INVALID_MOVE_NUM and responseList[2] == JAWResponses.INVALID_MOVE and self.requestState == JAWMethods.PLACE:
+	if responseList[1] == JAWStatusNum.INVALID_MOVE_NUM and responseList[2] == JAWResponses.INVALID_MOVE and player.requestState == JAWMethods.PLACE:
 		return None
 
 	# TO-DO
@@ -143,7 +145,7 @@ def processResponse(requestState, response):
 		return None	# this means someone won
 
 	# TO-DO
-	if responseList[1] == JAWStatusNum.USER_QUIT_NUM and responseList[2] == JAWResponses.USER_QUIT and self.requestState == JAWMethods.QUIT:
+	if responseList[1] == JAWStatusNum.USER_QUIT_NUM and responseList[2] == JAWResponses.USER_QUIT and player.requestState == JAWMethods.QUIT:
 		return None	# this means we quit
 
 def processStdin(stdinInput):
@@ -315,7 +317,9 @@ if __name__ == "__main__":
 						exit(1)
 					args = checkResponseProtocol(response)
 					if len(args) != 0:
-						processResponse(args)
+						action = processResponse(player, args)
+						if action != None:
+							processStdin(action)
 				elif fileno == stdinfd:
 					print "received something from stdin"
 					userinput = sys.stdin.read(128).strip()
