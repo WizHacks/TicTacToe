@@ -18,7 +18,6 @@ class Player(object):
 		self.isLoggedIn = False
 		self.timeLoggedIn = timeLoggedIn if timeLoggedIn != None else None
 
-
 	def __str__(self):
 		return 'username: '+ self.username + '\nstatus: ' + str(self.status) + '\ngameId: ' + str(self.gameId) + '\ntimeLoggedIn: ' + self.timeLoggedIn
 
@@ -27,9 +26,9 @@ class Player(object):
 		'''
 		Log the player into the server denoted by server
 		'''
-		print 'Login in progress ...'
+		print "Login in progress ..."
 		json_data = json.dumps(self.createPlayerDictionary())
-		message = JAWMethods.LOGIN + " " + json_data + "\r\n\r\n"
+		message = JAWMisc.JAW + " " + JAWMethods.LOGIN + " " + json_data + " " + JAWMisc.CRNLCRNL
 		self.lastRequestSent = JAWMethods.LOGIN
 		self.sendMessage(message)
 
@@ -38,7 +37,8 @@ class Player(object):
 		Send request to server asking to play the specified opponent
 		@param opponent the player we wish to versus
 		'''
-		message = JAWMethods.PLAY +" " + opponent +" " + "\r\n\r\n"
+		message = JAWMisc.JAW + " " + JAWMethods.PLAY + " " + opponent +" " + " " + JAWMisc.CRNLCRNL
+		self.opponent = opponent
 		self.lastRequestSent = JAWMethods.PLAY
 		self.sendMessage(message)
 
@@ -46,7 +46,7 @@ class Player(object):
 		'''
 		Send request to server asking for available users
 		'''
-		message = JAWMethods.WHO + "\r\n\r\n"
+		message = JAWMisc.JAW + " " + JAWMethods.WHO + " " + JAWMisc.CRNLCRNL
 		self.lastRequestSent = JAWMethods.WHO
 		self.sendMessage(message)
 
@@ -54,7 +54,7 @@ class Player(object):
 		'''
 		Send break up request to server
 		'''
-		message = JAWMethods.EXIT + "\r\n\r\n"
+		message = JAWMisc.JAW + " " + JAWMethods.EXIT + " " + JAWMisc.CRNLCRNL
 		self.lastRequestSent = JAWMethods.EXIT
 		self.sendMessage(message)
 
@@ -62,7 +62,8 @@ class Player(object):
 		'''
 		Send request to server to place move at given location
 		'''
-		message = JAWMethods.PLACE + " " + move + "\r\n\r\n"
+		message = JAWMisc.JAW + " " + JAWMethods.PLACE + " " + move + " " + JAWMisc.CRNLCRNL
+		self.move = move
 		self.lastRequestSent = JAWMethods.PLACE
 		self.sendMessage(message)
 		#print "From place(" + move+ ")"
@@ -95,6 +96,7 @@ class Player(object):
 		@param message the message to send to server
 		'''
 		clientSocket.send(message)
+		print "SENT: " + message
 
 	def createPlayerDictionary(self):
 		playerDictionary = {}
@@ -105,46 +107,50 @@ class Player(object):
 		return playerDictionary
 
 '''utility functions'''
-def processResponse(requestState, response):
+def processResponse(player, responseList):
 	'''
 	Process the response message returned by the server and take appropriate action
 	@param requestState player request state
 	@param response response received from the server
 	'''
-	responseList = self.checkProtocol(response)
-	if responseList[1] == JAWStatusNum.OK_NUM and responseList[2] == JAWResponses.OK and self.requestState == JAWMethods.LOGIN:
-		self.timeLoggedIn = time.time()
-		self.isLoggedIn = True
-		print "Logged in successfully at time: ", time.strftime("%b %d %Y %H:%M:%S", time.gmtime(self.timeLoggedIn))
+	if responseList[1] == JAWStatusNum.OK_NUM and responseList[2] == JAWStatuses.OK and player.lastRequestSent == JAWMethods.LOGIN:
+		player.timeLoggedIn = time.time()
+		player.isLoggedIn = True
+		print "Logged in successfully at time: ", time.strftime("%b %d %Y %H:%M:%S", time.gmtime(player.timeLoggedIn))
 
 	# What happens if server sends me 400?
 	if responseList[1] == JAWStatusNum.ERROR_NUM and responseList[2] == JAWResponses.ERROR:
 		print "Server sent a 400 ERROR"
 
-	# TO-DO	need to test on server
-	if responseList[1] == JAWStatusNum.USERNAME_TAKEN_NUM and responseList[2] == JAWResponses.USERNAME_TAKEN and self.requestState == JAWMethods.LOGIN:
+	if responseList[1] == JAWStatusNum.USERNAME_TAKEN_NUM and responseList[2] == JAWResponses.USERNAME_TAKEN and player.lastRequestSent == JAWMethods.LOGIN:
 		print "Username as been taken, please enter another name:"
-		return JAWMethods.LOGIN
+		return JAWMethods.LOGIN.lower()
 
-	# TO-DO
-	if responseList[1] == JAWStatusNum.USER_BUSY_NUM and responseList[2] == JAWResponses.USER_BUSY and self.requestState == JAWMethods.PLAY:
+	if responseList[1] == JAWStatusNum.USER_BUSY_NUM and responseList[2] == JAWResponses.USER_BUSY and player.lastRequestSent == JAWMethods.PLAY:
+		print "Opponent %s is busy!" %(player.opponent)
+		player.opponent = None
 		return None
 
-	# TO-DO
-	if responseList[1] == JAWStatusNum.USER_NOT_FOUND_NUM and responseList[2] == JAWResponses.USER_NOT_FOUND and self.requestState == JAWMethods.PLAY:
+	if responseList[1] == JAWStatusNum.USER_NOT_FOUND_NUM and responseList[2] == JAWResponses.USER_NOT_FOUND and player.lastRequestSent == JAWMethods.PLAY:
+		print "Opponent %s does not exist!" %(player.opponent)
+		player.opponent = None
 		return None
 
-	# TO-DO
-	if responseList[1] == JAWStatusNum.INVALID_MOVE_NUM and responseList[2] == JAWResponses.INVALID_MOVE and self.requestState == JAWMethods.PLACE:
+	if responseList[1] == JAWStatusNum.INVALID_MOVE_NUM and responseList[2] == JAWResponses.INVALID_MOVE and player.lastRequestSent == JAWMethods.PLACE:
+		print "Invalid move: %s" %(player.move)
 		return None
 
-	# TO-DO
 	if responseList[1] == JAWStatusNum.GAME_END_NUM and responseList[2] == JAWResponses.GAME_END:
+		if responseList[3] == JAWResponses.WINNER:
+			if responseList[4] == player.username:
+				print "Congratulations, you won!"
+			else:
+				print "You lost, better luck next time!"
 		return None	# this means someone won
 
-	# TO-DO
-	if responseList[1] == JAWStatusNum.USER_QUIT_NUM and responseList[2] == JAWResponses.USER_QUIT and self.requestState == JAWMethods.QUIT:
-		return None	# this means we quit
+	if responseList[1] == JAWStatusNum.USER_QUIT_NUM and responseList[2] == JAWResponses.USER_QUIT and player.lastRequestSent == JAWMethods.QUIT:
+		print player.username + "Logging off ..."
+		exit(1)
 
 def processStdin(stdinInput):
 	'''
@@ -161,10 +167,9 @@ def processStdin(stdinInput):
 		else:
 			while True:
 				username = raw_input("")
-				if not checkUsername(username):
-					print "Username must not contain any spaces!"
-				else:
+				if checkUsername(username):
 					break
+				print "Username must not contain any spaces!"
 			player.username = username
 			player.makeRequest(JAWMethods.LOGIN)
 	elif args[0] == "exit":
@@ -190,55 +195,43 @@ def checkResponseProtocol(packet):
 	@return list of extracted protocol details
 	'''
 	statusCodes = [JAWStatuses.OK, JAWStatuses.ERROR, JAWStatuses.USERNAME_TAKEN,
-				JAWStatuses.USER_BUSY, JAWStatuses.USER_NOT_FOUND, JAWStatuses.INVALID_MOVE, JAWStatuses.GAME_END, JAWStatuses.USER_QUIT]
-	statusBodies = [JAWResponses.PRINT, JAWResponses.PLAYER, JAWResponses.WINNER, JAWResponses.PLAYERS, JAWResponses.QUIT]
+				JAWStatuses.USER_BUSY, JAWStatuses.USER_NOT_FOUND, JAWStatuses.INVALID_MOVE,
+				JAWStatuses.GAME_END, JAWStatuses.USER_QUIT]
+	statusBodies = [JAWResponses.PRINT, JAWResponses.PLAYER, JAWResponses.WINNER,
+				JAWResponses.PLAYERS, JAWResponses.QUIT]
 	args = []
+
 	if packet.count(JAWMisc.CRNLCRNL) == 1:
-		if packet.count(JAWMisc.CRNL) == 1:
-			print "success"
-			args = packet.strip().split()
+		args = packet.strip().split()
+		if args[0] != JAWMisc.JAW:
+			print "Invalid format -> required protocol to begin with JAW/1.0"
+			return []
+		try:
+			int(args[1])
+		except ValueError:
+			print "Invalid status number\nExpected: number\nFound: ", args[1]
+			return []
+		if args[2] not in statusCodes:
+			print "Invalid status code\nExpected:OK,ERROR,USERNAME_TAKEN,USER_BUSY,USER_NOT_FOUND,",
+			print "INVALID_MOVE,GAME_END,USER_QUIT\n Found: ", args[2]
+			return []
+		if packet.count(JAWMisc.CRNL) == 3:
 			if len(args) != 4:
-				print "Invalid protocol format ... ignored"
+				print "Invalid protocol length"
 				return []
 			else:
-				if args[0] != JAWMisc.JAW:
-					print "Invalid protocol format ... ignored"
-					return []
-				try:
-					int(args[1])
-				except ValueError:
-					print "Invalid protocol format ... ignored"
-					return []
-				if args[2] not in statusCodes:
-					print "Invalid protocol format ... ignored"
-					return []
 				body = args[3][args[3].find(":") +1:]
 				if body not in statusBodies:
 					print "Invalid protocol format ... ignored"
 					return []
+				else:
+					print "Body: ", body
 		else:
-			args = packet.strip().split()
 			if len(args) != 3:
-				print "Invalid protocol format ... ignored"
+				print "Invalid protocol length"
 				return []
-			if args[0] != JAWMisc.JAW:
-					print "Invalid protocol format ... ignored"
-					return []
-			try:
-				int(args[1])
-			except ValueError:
-				print "Invalid protocol format ... ignored"
-				return []
-
-			if args[2] not in statusCodes:
-				print "Invalid protocol format ... ignored"
-				return []
-	print args
+	print "response protocol: ", args
 	return args
-
-print "testing here ----------------------------------------------"
-checkResponseProtocol("hi \r\nWendy\r\n\r\n")
-print "testing here ----------------------------------------------"
 
 def checkUsername(username):
 	'''Determine whether the username is valid or not'''
@@ -305,26 +298,29 @@ if __name__ == "__main__":
 			events = epoll.poll(1) # file no and event code
 			for fileno, event in events:
 				if event & select.EPOLLHUP:
-					epoll.unregister(fileno)
-					epoll.unregister(stdinfd)
-					epoll.close()
-					clientSocket.close()
+					# epoll.unregister(fileno)
+					# epoll.unregister(stdinfd)
+					# epoll.close()
+					# clientSocket.close()
 					print "Lost connection to server\n Exiting..."
 					exit(1)
 				if fileno == clientSocket.fileno():
-					print "received something from the server, process it"
+					print "Received something from the server, process it"
 					response = clientSocket.recv(2048)
-					print response
+					print "RCVD: " + response
 					if len(response) == 0:
 						print "Lost connection to server\n Exiting..."
 						exit(1)
 					args = checkResponseProtocol(response)
+					print "ARGS: ",
+					print args
 					if len(args) != 0:
-						processResponse(args)
+						action = processResponse(player, args)
+						if action != None:
+							processStdin(action)
 				elif fileno == stdinfd:
-					print "received something from stdin"
 					userinput = sys.stdin.read(128).strip()
-					print userinput
+					print "STDIN: " + userinput
 					processStdin(userinput)
 				else:
 					print "Not suppose to print"
