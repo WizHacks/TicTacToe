@@ -114,7 +114,6 @@ def processResponse(player, responseList):
 	@param requestState player request state
 	@param response response received from the server
 	'''
-	print "responseList" + str(len(responseList))
 	if responseList[1] == JAWStatusNum.OK_NUM and responseList[2] == JAWStatuses.OK and player.lastRequestSent == JAWMethods.LOGIN:
 		player.timeLoggedIn = time.time()
 		player.isLoggedIn = True
@@ -201,7 +200,6 @@ def checkResponseProtocol(packet):
 	statusBodies = [JAWResponses.PRINT, JAWResponses.PLAYER, JAWResponses.WINNER, JAWResponses.PLAYERS, JAWResponses.QUIT]
 	args = []	
 	if packet.count(JAWMisc.CRNLCRNL) == 1:
-		print "found"
 		args = packet.strip().split()
 		if args[0] != JAWMisc.JAW:
 			print "Invalid format -> required protocol to begin with JAW/1.0"
@@ -306,10 +304,10 @@ if __name__ == "__main__":
 			events = epoll.poll(1) # file no and event code
 			for fileno, event in events:
 				if event & select.EPOLLHUP:
-					epoll.unregister(fileno)
-					epoll.unregister(stdinfd)
-					epoll.close()
-					clientSocket.close()
+					# epoll.unregister(fileno)
+					# epoll.unregister(stdinfd)
+					# epoll.close()
+					# clientSocket.close()
 					print "Lost connection to server\n Exiting..."
 					exit(1)
 				if fileno == clientSocket.fileno():
@@ -320,6 +318,7 @@ if __name__ == "__main__":
 						print "Lost connection to server\n Exiting..."
 						exit(1)
 					args = checkResponseProtocol(response)
+					print "ARGS: ",
 					print args
 					if len(args) != 0:
 						action = processResponse(player, args)
