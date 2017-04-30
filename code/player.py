@@ -113,10 +113,19 @@ def processResponse(player, responseList):
 	@param requestState player request state
 	@param response response received from the server
 	'''
-	if responseList[1] == JAWStatusNum.OK_NUM and responseList[2] == JAWStatuses.OK and player.lastRequestSent == JAWMethods.LOGIN:
-		player.timeLoggedIn = time.time()
-		player.isLoggedIn = True
-		print "Logged in successfully at time: ", time.strftime("%b %d %Y %H:%M:%S", time.gmtime(player.timeLoggedIn))
+	if responseList[1] == JAWStatusNum.OK_NUM and responseList[2] == JAWStatuses.OK:
+		# LOGIN
+		if player.lastRequestSent == JAWMethods.LOGIN:
+			player.timeLoggedIn = time.time()
+			player.isLoggedIn = True
+			print "Logged in successfully at time: ", time.strftime("%b %d %Y %H:%M:%S", time.gmtime(player.timeLoggedIn))
+		# PRINT	
+		elif player.lastRequestSent == JAWMethods.PLACE and responseList[3][:responseList[3].find(":")] == JAWResponses.PRINT:
+			board = responseList[3][find(":")+1:]
+			print board
+		# PLAYER
+		# PLAYERS
+		# WINNER
 
 	# What happens if server sends me 400?
 	if responseList[1] == JAWStatusNum.ERROR_NUM and responseList[2] == JAWResponses.ERROR:
@@ -184,6 +193,9 @@ def processStdin(stdinInput):
 			print "\t\t\t [ 4, 5, 6]"
 			print "\t\t\t [ 7, 8, 9]"
 			print "\t\t\t\t- place your symbol at the corresponding poisition labeled in grid above"
+	elif args[0] == "play":
+		if len(args) == 2 and checkUsername(args[1]):
+			player.makeRequest(JAWMethods.PLAY, args[1])		
 	# elif args[0] == "observe":
 	# 	print "if len(args) == 2"
 	else:
