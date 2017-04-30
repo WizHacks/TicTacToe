@@ -112,7 +112,7 @@ class Board(object):
 		self.printBoard()
 
 def test():
-	board = Board("p1", "p2", "p1") 
+	board = Board("p1", "p2", "p1")
 	board.place(1)
 	board.place(1)
 	board.place(4)
