@@ -113,11 +113,12 @@ def processResponse(player, responseList):
 	@param requestState player request state
 	@param response response received from the server
 	'''
-	print "responseList" + str(len(responseList))
+	#print "responseList" + str(len(responseList))
 	if responseList[1] == JAWStatusNum.OK_NUM and responseList[2] == JAWStatuses.OK and player.lastRequestSent == JAWMethods.LOGIN:
 		player.timeLoggedIn = time.time()
 		player.isLoggedIn = True
 		print "Logged in successfully at time: ", time.strftime("%b %d %Y %H:%M:%S", time.gmtime(player.timeLoggedIn))
+		# print json.dumps(player.createPlayerDictionary())
 
 	# What happens if server sends me 400?
 	if responseList[1] == JAWStatusNum.ERROR_NUM and responseList[2] == JAWResponses.ERROR:
@@ -143,10 +144,7 @@ def processResponse(player, responseList):
 
 	if responseList[1] == JAWStatusNum.GAME_END_NUM and responseList[2] == JAWResponses.GAME_END:
 		if responseList[3] == JAWResponses.WINNER:
-			if responseList[4] == player.username:
-				print "Congratulations, you won!"
-			else:
-				print "You lost, better luck next time!"
+			print "Congratulations, you won!" if responseList[4] == player.username else "You lost, better luck next time!"
 		return None	# this means someone won
 
 	if responseList[1] == JAWStatusNum.USER_QUIT_NUM and responseList[2] == JAWResponses.USER_QUIT and player.lastRequestSent == JAWMethods.QUIT:
@@ -160,6 +158,7 @@ def processStdin(stdinInput):
 	'''
 	global player
 	args = stdinInput.split(" ")
+	args[0] = args[0].lower()
 	if args[0] == "help":
 		help()
 	elif args[0] == "login" or not player.isLoggedIn:
@@ -179,12 +178,11 @@ def processStdin(stdinInput):
 		player.makeRequest(JAWMethods.WHO)
 	elif args[0] == "place":
 		if len(args) == 2 and len(args[1]) == 1 and args[1][0] > '0' and args[1][0] <= '9':
-			player.makeRequest(JAWMethods.PLACE, args[1][0])
+			player.makeRequest(JAWMethods.PLACE, args[1][0] - '0')
 		else:
-			print "Invalid number of arguments\nExpected: place [index]\t [ 1, 2, 3]"
-			print "\t\t\t [ 4, 5, 6]"
-			print "\t\t\t [ 7, 8, 9]"
-			print "\t\t\t\t- place your symbol at the corresponding poisition labeled in grid above"
+			print "Invalid number of arguments\nExpected: place [index]"
+			print "\t [ 1, 2, 3]\n\t\t\t [ 4, 5, 6]\n\t\t\t [ 7, 8, 9]"
+			print "\t\t\t\t- place your symbol at the corresponding position labeled in grid above"
 	# elif args[0] == "observe":
 	# 	print "if len(args) == 2"
 	else:
@@ -201,9 +199,7 @@ def checkResponseProtocol(packet):
 	statusBodies = [JAWResponses.PRINT, JAWResponses.PLAYER, JAWResponses.WINNER,
 				JAWResponses.PLAYERS, JAWResponses.QUIT]
 	args = []
-
 	if packet.count(JAWMisc.CRNLCRNL) == 1:
-		print "found"
 		args = packet.strip().split()
 		if args[0] != JAWMisc.JAW:
 			print "Invalid format -> required protocol to begin with JAW/1.0"
@@ -307,9 +303,9 @@ if __name__ == "__main__":
 					print "Lost connection to server\n Exiting..."
 					exit(1)
 				if fileno == clientSocket.fileno():
-					print "Received something from the server, process it"
+					# print "Received something from the server, process it"
 					response = clientSocket.recv(2048)
-					print "RCVD: " + response
+					# print "RCVD: " + response
 					if len(response) == 0:
 						print "Lost connection to server\n Exiting..."
 						exit(1)
@@ -321,7 +317,7 @@ if __name__ == "__main__":
 							processStdin(action)
 				elif fileno == stdinfd:
 					userinput = sys.stdin.read(128).strip()
-					print "STDIN: " + userinput
+					# print "STDIN: " + userinput
 					processStdin(userinput)
 				else:
 					print "Not suppose to print"
