@@ -25,7 +25,7 @@ class JAWStatuses(object):
 class JAWStatusNum(object):
 	OK_NUM 				= "200"
 	ERROR_NUM 			= "400"
-	USERNAME_TAKEN_NUM 		= "401"
+	USERNAME_TAKEN_NUM 	= "401"
 	USER_BUSY_NUM 		= "402"
 	USER_NOT_FOUND_NUM 	= "403"
 	INVALID_MOVE_NUM 	= "405"
