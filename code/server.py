@@ -133,9 +133,10 @@ class Server(object):
 		@param message Message to send
 		@param connection Sockwt connection to send message to
 		'''
-		self.connections[fileno].send(message)
-		print "Sent: " + message #TO DELETE
 		epoll.modify(fileno, select.EPOLLOUT)
+		self.connections[fileno].send(message)
+		epoll.modify(fileno, select.EPOLLIN | select.EPOLLET)
+		print "Sent: " + message #TO DELETE
 		return
 
 
@@ -167,7 +168,6 @@ class Server(object):
 		recurr = request.count('\r\n\r\n')
 		if recurr == 0 or recurr > 1:
 			self.sendMessage("JAW/1.0 400 ERROR \r\n\r\n", fileno)
-			epoll.modify(fileno, select.EPOLLOUT)
 			return
 		requests = request.split()
 		print requests#TO DELETE
@@ -196,8 +196,8 @@ class Server(object):
 			if len(requests) < 3:
 				self.sendMessage("JAW/1.0 400 ERROR \r\n\r\n", fileno)
 			else:
-				currentPlayer = players[fileno]
-				currentGame = games[currentPlayer.gameId]
+				currentPlayer = self.players[fileno]
+				currentGame = self.games[currentPlayer.gameId]
 				validMove = currentGame.place(int(requests[2]))
 				if validMove:
 					otherPlayer = currentGame.currentPlayer
@@ -256,15 +256,17 @@ class Server(object):
 			if len(requests) < 2:
 				self.sendMessage("JAW/1.0 400 ERROR \r\n\r\n", fileno)
 			else:
+				currentPlayer = self.players[fileno]
 				players = self.getAvailablePlayers()
-				data = "JAW/1.0 200 OK \r\n PLAYERS:"
+				data = ""
 				for p in players:
-					if p['username'] != players[fileno]['username']:
-						data += p['username'] + ","
-				self.sendMessage(data[:(len(data)-1)] + " \r\n\r\n", fileno)
+					if p != currentPlayer['username']:
+						data += p + ","
+				info = "JAW/1.0 200 OK \r\n PLAYERS:" + data[:(len(data)-1)] + " \r\n\r\n"
+				print info
+				self.sendMessage(info, fileno)
 		else:
 			self.sendMessage("JAW/1.0 400 ERROR \r\n\r\n", fileno)
-		epoll.modify(fileno, select.EPOLLOUT)
 		return
 
 
