@@ -29,7 +29,7 @@ class Player(object):
 		'''
 		print 'Login in progress ...'
 		json_data = json.dumps(self.createPlayerDictionary())
-		message = JAWMethods.LOGIN + " " + json_data + "\r\n\r\n"
+		message = JAWMISC.JAW + " " + JAWMethods.LOGIN + " " + json_data + " " + JAWMISC.CRNLCRNL
 		self.lastRequestSent = JAWMethods.LOGIN
 		self.sendMessage(message)
 
@@ -38,7 +38,7 @@ class Player(object):
 		Send request to server asking to play the specified opponent
 		@param opponent the player we wish to versus
 		'''
-		message = JAWMethods.PLAY + " " + opponent +" " + "\r\n\r\n"
+		message = JAWMISC.JAW + " " + JAWMethods.PLAY + " " + opponent +" " + " " + JAWMISC.CRNLCRNL
 		self.opponent = opponent
 		self.lastRequestSent = JAWMethods.PLAY
 		self.sendMessage(message)
@@ -47,7 +47,7 @@ class Player(object):
 		'''
 		Send request to server asking for available users
 		'''
-		message = JAWMethods.WHO + "\r\n\r\n"
+		message = JAWMISC.JAW + " " + JAWMethods.WHO + " " + JAWMISC.CRNLCRNL
 		self.lastRequestSent = JAWMethods.WHO
 		self.sendMessage(message)
 
@@ -55,7 +55,7 @@ class Player(object):
 		'''
 		Send break up request to server
 		'''
-		message = JAWMethods.EXIT + "\r\n\r\n"
+		message = JAWMISC.JAW + " " + JAWMethods.EXIT + " " + JAWMISC.CRNLCRNL
 		self.lastRequestSent = JAWMethods.EXIT
 		self.sendMessage(message)
 
@@ -63,7 +63,8 @@ class Player(object):
 		'''
 		Send request to server to place move at given location
 		'''
-		message = JAWMethods.PLACE + " " + move + "\r\n\r\n"
+		message = JAWMISC.JAW + " " + JAWMethods.PLACE + " " + move + " " + JAWMISC.CRNLCRNL
+		self.move = move
 		self.lastRequestSent = JAWMethods.PLACE
 		self.sendMessage(message)
 		#print "From place(" + move+ ")"
@@ -122,31 +123,35 @@ def processResponse(player, response):
 	if responseList[1] == JAWStatusNum.ERROR_NUM and responseList[2] == JAWResponses.ERROR:
 		print "Server sent a 400 ERROR"
 
-	# TO-DO	need to test on server
 	if responseList[1] == JAWStatusNum.USERNAME_TAKEN_NUM and responseList[2] == JAWResponses.USERNAME_TAKEN and player.requestState == JAWMethods.LOGIN:
 		print "Username as been taken, please enter another name:"
 		return JAWMethods.LOGIN.lower()
 
-	# TO-DO
 	if responseList[1] == JAWStatusNum.USER_BUSY_NUM and responseList[2] == JAWResponses.USER_BUSY and player.requestState == JAWMethods.PLAY:
 		print "Opponent %s is busy!" %(player.opponent)
+		player.opponent = None
 		return None
 
-	# TO-DO
 	if responseList[1] == JAWStatusNum.USER_NOT_FOUND_NUM and responseList[2] == JAWResponses.USER_NOT_FOUND and player.requestState == JAWMethods.PLAY:
+		print "Opponent %s does not exist!" %(player.opponent)
+		player.opponent = None
 		return None
 
-	# TO-DO
 	if responseList[1] == JAWStatusNum.INVALID_MOVE_NUM and responseList[2] == JAWResponses.INVALID_MOVE and player.requestState == JAWMethods.PLACE:
+		print "Invalid move: %s" %(player.move)
 		return None
 
-	# TO-DO
 	if responseList[1] == JAWStatusNum.GAME_END_NUM and responseList[2] == JAWResponses.GAME_END:
+		if responseList[3] == JAWResponses.WINNER:
+			if responseList[4] == player.username:
+				print "Congratulations, you won!"
+			else:
+				print "You lost, better luck next time!"
 		return None	# this means someone won
 
-	# TO-DO
 	if responseList[1] == JAWStatusNum.USER_QUIT_NUM and responseList[2] == JAWResponses.USER_QUIT and player.requestState == JAWMethods.QUIT:
-		return None	# this means we quit
+		print player.username + "Logging off ..."
+		exit(1)
 
 def processStdin(stdinInput):
 	'''
@@ -196,7 +201,7 @@ def checkResponseProtocol(packet):
 	statusBodies = [JAWResponses.PRINT, JAWResponses.PLAYER, JAWResponses.WINNER, JAWResponses.PLAYERS, JAWResponses.QUIT]
 	args = []
 	if packet.count(JAWMisc.CRNLCRNL) == 1:
-		if packet.count(JAWMisc.CRNL) == 1:
+		if packet.count(JAWMisc.CRNL) == 3:
 			print "success"
 			args = packet.strip().split()
 			if len(args) != 4:
@@ -237,10 +242,6 @@ def checkResponseProtocol(packet):
 				return []
 	print args
 	return args
-
-print "testing here ----------------------------------------------"
-checkResponseProtocol("hi \r\nWendy\r\n\r\n")
-print "testing here ----------------------------------------------"
 
 def checkUsername(username):
 	'''Determine whether the username is valid or not'''
