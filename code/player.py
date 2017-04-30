@@ -27,7 +27,7 @@ class Player(object):
 		'''
 		Log the player into the server denoted by server
 		'''
-		print 'Login in progress ...'
+		print "Login in progress ..."
 		json_data = json.dumps(self.createPlayerDictionary())
 		message = JAWMISC.JAW + " " + JAWMethods.LOGIN + " " + json_data + " " + JAWMISC.CRNLCRNL
 		self.lastRequestSent = JAWMethods.LOGIN
@@ -38,7 +38,7 @@ class Player(object):
 		Send request to server asking to play the specified opponent
 		@param opponent the player we wish to versus
 		'''
-		message = JAWMISC.JAW + " " + JAWMethods.PLAY + " " + opponent +" " + " " + JAWMISC.CRNLCRNL
+		message = JAWMisc.JAW + " " + JAWMethods.PLAY + " " + opponent +" " + " " + JAWMISC.CRNLCRNL
 		self.opponent = opponent
 		self.lastRequestSent = JAWMethods.PLAY
 		self.sendMessage(message)
@@ -47,7 +47,7 @@ class Player(object):
 		'''
 		Send request to server asking for available users
 		'''
-		message = JAWMISC.JAW + " " + JAWMethods.WHO + " " + JAWMISC.CRNLCRNL
+		message = JAWMisc.JAW + " " + JAWMethods.WHO + " " + JAWMISC.CRNLCRNL
 		self.lastRequestSent = JAWMethods.WHO
 		self.sendMessage(message)
 
@@ -55,7 +55,7 @@ class Player(object):
 		'''
 		Send break up request to server
 		'''
-		message = JAWMISC.JAW + " " + JAWMethods.EXIT + " " + JAWMISC.CRNLCRNL
+		message = JAWMisc.JAW + " " + JAWMethods.EXIT + " " + JAWMISC.CRNLCRNL
 		self.lastRequestSent = JAWMethods.EXIT
 		self.sendMessage(message)
 
@@ -63,7 +63,7 @@ class Player(object):
 		'''
 		Send request to server to place move at given location
 		'''
-		message = JAWMISC.JAW + " " + JAWMethods.PLACE + " " + move + " " + JAWMISC.CRNLCRNL
+		message = JAWMisc.JAW + " " + JAWMethods.PLACE + " " + move + " " + JAWMISC.CRNLCRNL
 		self.move = move
 		self.lastRequestSent = JAWMethods.PLACE
 		self.sendMessage(message)
