@@ -27,7 +27,7 @@ class Player(object):
 		'''
 		Log the player into the server denoted by server
 		'''
-		print 'Login in progress ...'
+		print "Login in progress ..."
 		json_data = json.dumps(self.createPlayerDictionary())
 		message = JAWMisc.JAW + " " + JAWMethods.LOGIN + " " + json_data + " " + JAWMisc.CRNLCRNL
 		self.lastRequestSent = JAWMethods.LOGIN
