@@ -29,7 +29,7 @@ class Player(object):
 		'''
 		print 'Login in progress ...'
 		json_data = json.dumps(self.createPlayerDictionary())
-		message = JAWMISC.JAW + " " + JAWMethods.LOGIN + " " + json_data + " " + JAWMISC.CRNLCRNL
+		message = JAWMisc.JAW + " " + JAWMethods.LOGIN + " " + json_data + " " + JAWMisc.CRNLCRNL
 		self.lastRequestSent = JAWMethods.LOGIN
 		self.sendMessage(message)
 
@@ -38,7 +38,7 @@ class Player(object):
 		Send request to server asking to play the specified opponent
 		@param opponent the player we wish to versus
 		'''
-		message = JAWMISC.JAW + " " + JAWMethods.PLAY + " " + opponent +" " + " " + JAWMISC.CRNLCRNL
+		message = JAWMisc.JAW + " " + JAWMethods.PLAY + " " + opponent +" " + " " + JAWMisc.CRNLCRNL
 		self.opponent = opponent
 		self.lastRequestSent = JAWMethods.PLAY
 		self.sendMessage(message)
@@ -47,7 +47,7 @@ class Player(object):
 		'''
 		Send request to server asking for available users
 		'''
-		message = JAWMISC.JAW + " " + JAWMethods.WHO + " " + JAWMISC.CRNLCRNL
+		message = JAWMisc.JAW + " " + JAWMethods.WHO + " " + JAWMisc.CRNLCRNL
 		self.lastRequestSent = JAWMethods.WHO
 		self.sendMessage(message)
 
@@ -55,7 +55,7 @@ class Player(object):
 		'''
 		Send break up request to server
 		'''
-		message = JAWMISC.JAW + " " + JAWMethods.EXIT + " " + JAWMISC.CRNLCRNL
+		message = JAWMisc.JAW + " " + JAWMethods.EXIT + " " + JAWMisc.CRNLCRNL
 		self.lastRequestSent = JAWMethods.EXIT
 		self.sendMessage(message)
 
@@ -63,7 +63,7 @@ class Player(object):
 		'''
 		Send request to server to place move at given location
 		'''
-		message = JAWMISC.JAW + " " + JAWMethods.PLACE + " " + move + " " + JAWMISC.CRNLCRNL
+		message = JAWMisc.JAW + " " + JAWMethods.PLACE + " " + move + " " + JAWMisc.CRNLCRNL
 		self.move = move
 		self.lastRequestSent = JAWMethods.PLACE
 		self.sendMessage(message)
@@ -180,10 +180,9 @@ def processStdin(stdinInput):
 		else:
 			while True:
 				username = raw_input("")
-				if not checkUsername(username):
-					print "Username must not contain any spaces!"
-				else:
+				if checkUsername(username):
 					break
+				print "Username must not contain any spaces!"
 			player.username = username
 			player.makeRequest(JAWMethods.LOGIN)
 	elif args[0] == "exit":
@@ -214,6 +213,7 @@ def checkResponseProtocol(packet):
 	args = []
 	if packet.count(JAWMisc.CRNLCRNL) == 1:
 		args = packet.strip().split()
+		print "args: ",args
 		if args[0] != JAWMisc.JAW:
 			print "Invalid format -> required protocol to begin with JAW/1.0"
 			return []
