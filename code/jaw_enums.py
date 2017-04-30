@@ -1,16 +1,16 @@
 class JAWMethods(object):
-	LOGIN = "LOGIN"
-	PLACE = "PLACE"
-	PLAY = "PLAY"
-	EXIT = "EXIT"
-	WHO = "WHO"
+	LOGIN 				= "LOGIN"
+	PLACE 				= "PLACE"
+	PLAY 				= "PLAY"
+	EXIT 				= "EXIT"
+	WHO 				= "WHO"
 
 class JAWResponses(object):
-	PRINT = "PRINT"
-	PLAYER = "PLAYER"
-	WINNER = "WINNER"
-	PLAYERS = "PLAYERS"
-	QUIT = "QUIT"
+	PRINT 				= "PRINT"
+	PLAYER 				= "PLAYER"
+	WINNER 				= "WINNER"
+	PLAYERS 			= "PLAYERS"
+	QUIT 				= "QUIT"
 
 class JAWStatuses(object):
 	OK 					= "OK"
@@ -18,7 +18,7 @@ class JAWStatuses(object):
 	USERNAME_TAKEN 		= "USERNAME TAKEN"
 	USER_BUSY 			= "USER BUSY"
 	USER_NOT_FOUND 		= "USER NOT FOUND"
-	INVALID_MOVE_NUM 	= "INVALID MOVE"
+	INVALID_MOVE 		= "INVALID MOVE"
 	GAME_END 			= "GAME END"
 	USER_QUIT 			= "USER QUIT"
 

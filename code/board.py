@@ -53,10 +53,7 @@ class Board(object):
 
 		if winner != 0:
 			print((self.player1 if winner == 1 else self.player2) + " has won")
-			if winner = 1:
-				return self.player1
-			else:
-				return self.player2
+			return self.player1 if winner == 1 else self.player2
 		if self.board[0] * self.board[1] * self.board[2] * self.board[3] * self.board[4] * self.board[5] * self.board[6] * self.board[7] * self.board[8] > 0:
 			print("This game is a draw")
 			return "No-one"

@@ -191,10 +191,11 @@ def checkResponseProtocol(packet):
 	'''
 	statusCodes = [JAWStatuses.OK, JAWStatuses.ERROR, JAWStatuses.USERNAME_TAKEN,
 				JAWStatuses.USER_BUSY, JAWStatuses.USER_NOT_FOUND, JAWStatuses.INVALID_MOVE, JAWStatuses.GAME_END, JAWStatuses.USER_QUIT]
-	statusBodies = [JAWResponses.Print, JAWResponses.PLAYER, JAWResponses.WINNER, JAWResponses.PLAYERS, JAWResponses.QUIT]
+	statusBodies = [JAWResponses.PRINT, JAWResponses.PLAYER, JAWResponses.WINNER, JAWResponses.PLAYERS, JAWResponses.QUIT]
 	args = []
 	if packet.count(JAWMisc.CRNLCRNL) == 1:
 		if packet.count(JAWMisc.CRNL) == 1:
+			print "success"
 			args = packet.strip().split()
 			if len(args) != 4:
 				print "Invalid protocol format ... ignored"
@@ -234,6 +235,10 @@ def checkResponseProtocol(packet):
 				return []
 	print args
 	return args
+
+print "testing here ----------------------------------------------"
+checkResponseProtocol("hi \r\nWendy\r\n\r\n")
+print "testing here ----------------------------------------------"
 
 def checkUsername(username):
 	'''Determine whether the username is valid or not'''
