@@ -18,7 +18,6 @@ class Player(object):
 		self.isLoggedIn = False
 		self.timeLoggedIn = timeLoggedIn if timeLoggedIn != None else None
 
-
 	def __str__(self):
 		return 'username: '+ self.username + '\nstatus: ' + str(self.status) + '\ngameId: ' + str(self.gameId) + '\ntimeLoggedIn: ' + self.timeLoggedIn
 
@@ -196,47 +195,42 @@ def checkResponseProtocol(packet):
 	@return list of extracted protocol details
 	'''
 	statusCodes = [JAWStatuses.OK, JAWStatuses.ERROR, JAWStatuses.USERNAME_TAKEN,
-				JAWStatuses.USER_BUSY, JAWStatuses.USER_NOT_FOUND, JAWStatuses.INVALID_MOVE, JAWStatuses.GAME_END, JAWStatuses.USER_QUIT]
-	statusBodies = [JAWResponses.PRINT, JAWResponses.PLAYER, JAWResponses.WINNER, JAWResponses.PLAYERS, JAWResponses.QUIT]
-	args = []	
+				JAWStatuses.USER_BUSY, JAWStatuses.USER_NOT_FOUND, JAWStatuses.INVALID_MOVE,
+				JAWStatuses.GAME_END, JAWStatuses.USER_QUIT]
+	statusBodies = [JAWResponses.PRINT, JAWResponses.PLAYER, JAWResponses.WINNER,
+				JAWResponses.PLAYERS, JAWResponses.QUIT]
+	args = []
+
 	if packet.count(JAWMisc.CRNLCRNL) == 1:
 		args = packet.strip().split()
 		if args[0] != JAWMisc.JAW:
 			print "Invalid format -> required protocol to begin with JAW/1.0"
 			return []
+		try:
+			int(args[1])
+		except ValueError:
+			print "Invalid status number\nExpected: number\nFound: ", args[1]
+			return []
+		if args[2] not in statusCodes:
+			print "Invalid status code\nExpected:OK,ERROR,USERNAME_TAKEN,USER_BUSY,USER_NOT_FOUND,",
+			print "INVALID_MOVE,GAME_END,USER_QUIT\n Found: ", args[2]
+			return []
 		if packet.count(JAWMisc.CRNL) == 3:
 			if len(args) != 4:
-				print "Invalid protocol format ... ignored"
+				print "Invalid protocol length"
 				return []
 			else:
-				try:
-					int(args[1])
-				except ValueError:
-					print "Invalid protocol format ... ignored"
-					return []
-				if args[2] not in statusCodes:
-					print "Invalid protocol format ... ignored"
-					return []
 				body = args[3][args[3].find(":") +1:]
 				if body not in statusBodies:
 					print "Invalid protocol format ... ignored"
 					return []
+				else:
+					print "Body: ", body
 		else:
 			if len(args) != 3:
-				print "Invalid protocol format ... ignored"
+				print "Invalid protocol length"
 				return []
-			if args[0] != JAWMisc.JAW:
-					print "Invalid protocol format ... ignored"
-					return []
-			try:
-				int(args[1])
-			except ValueError:
-				print "Invalid protocol format ... ignored"
-				return []
-
-			if args[2] not in statusCodes:
-				print "Invalid protocol format ... ignored"
-				return []
+	print "response protocol: ", args
 	return args
 
 def checkUsername(username):
@@ -324,7 +318,7 @@ if __name__ == "__main__":
 						action = processResponse(player, args)
 						if action != None:
 							processStdin(action)
-				elif fileno == stdinfd:					
+				elif fileno == stdinfd:
 					userinput = sys.stdin.read(128).strip()
 					print "STDIN: " + userinput
 					processStdin(userinput)
