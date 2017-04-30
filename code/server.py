@@ -64,20 +64,20 @@ class Server(object):
 		Removes the player with a user id of username
 		@param usernamed User id of user to remove
 		'''
-		currentPlayer = players[fileno]
+		currentPlayer = self.players[fileno]
 		# Player is not in game
 		if currentPlayer['status'] == True:
 			fNum = fileno
 			epoll.unregister(fileno)
-			connections[fNum].close()
-			del connections[fNum]
-			del players[fNum]
+			self.connections[fNum].close()
+			del self.connections[fNum]
+			del self.players[fNum]
 			self.sendMessage("JAW/1.0 202 USER_QUIT \r\n QUIT:" + currentPlayer['username'] + "\r\n\r\n", fileno)
 		# Player is in game
 		else:
-			currentGame = games[currentPlayer['gameId']]
+			currentGame = self.games[currentPlayer['gameId']]
 			otherPlayer = currentGame.player2 if currentPlayer.username != currentGame.player2 else currentPlayer.username
-			del games[currentPlayer['gameId']]
+			del self.games[currentPlayer['gameId']]
 			self.broadcast("JAW/1.0 202 USER_QUIT \r\n QUIT:" + currentPlayer['username'] + "\r\n\r\n", fileno)
 			self.broadcast("JAW/1.0 201 GAME_END \r\n WINNER:" + otherPlayer + "\r\n\r\n", [fileno, self.getSocket(otherPlayer)])
 			otherPlayer = getPlayer(otherPlayer)
@@ -85,8 +85,8 @@ class Server(object):
 			fNum = fileno
 			epoll.unregister(fileno)
 			connections[fNum].close()
-			del connections[fNum]
-			del players[fNum]
+			del self.connections[fNum]
+			del self.players[fNum]
 		return
 
 	def addPlayer(self, connection, player):
