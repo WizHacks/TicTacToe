@@ -13,32 +13,32 @@ class JAWResponses(object):
 	QUIT = "QUIT"
 
 class JAWStatuses(object):
-	OK = "OK"
-	ERROR = "ERROR"
-	USERNAME_TAKEN = "USERNAME TAKEN"
-	USER_BUSY = "USER BUSY"
-	USER_NOT_FOUND = "USER NOT FOUND"
-	INVALID_MOVE = "INVALID MOVE"
-	GAME_END = "GAME END"
-	USER_QUIT = "USER QUIT"
+	OK 					= "OK"
+	ERROR 				= "ERROR"
+	USERNAME_TAKEN 		= "USERNAME TAKEN"
+	USER_BUSY 			= "USER BUSY"
+	USER_NOT_FOUND 		= "USER NOT FOUND"
+	INVALID_MOVE_NUM 	= "INVALID MOVE"
+	GAME_END 			= "GAME END"
+	USER_QUIT 			= "USER QUIT"
 
 class JAWStatusNum(object):
-	OK_NUM = "200"
-	ERROR_NUM = "400"
-	USERNAME_NUM = "401"
-	USER_BUSY_NUM = "402"
-	USER_NOT_FOUND_NUM = "403"
-	INVALID_MOVE_NUM = "405"
-	GAME_END_NUM = "201"
-	USER_QUIT_NUM = "202"
+	OK_NUM 				= "200"
+	ERROR_NUM 			= "400"
+	USERNAME_NUM 		= "401"
+	USER_BUSY_NUM 		= "402"
+	USER_NOT_FOUND_NUM 	= "403"
+	INVALID_MOVE_NUM 	= "405"
+	GAME_END_NUM 		= "201"
+	USER_QUIT_NUM 		= "202"
 
 class JAWMisc(object):
-	CRNLCRNL = "\r\n\r\n"
-	CRNL = "\r\n"
-	JAW = "JAW/1.0"
+	CRNLCRNL 			= "\r\n\r\n"
+	CRNL 				= "\r\n"
+	JAW 				= "JAW/1.0"
 
 if __name__ == "__main__":
-	request = JAWMethods.LOGIN
+	request 			= JAWMethods.LOGIN
 	print request
-	response = JAWResponses.PLAYERS
+	response 			= JAWResponses.PLAYERS
 	print response

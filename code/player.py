@@ -123,6 +123,7 @@ def processResponse(requestState, response):
 
 	# TO-DO	need to test on server
 	if responseList[1] == JAWStatusNum.USERNAME_TAKEN_NUM and responseList[2] == JAWResponses.USERNAME_TAKEN and self.requestState == JAWMethods.LOGIN:
+		print "Username as been taken, please enter another name:"
 		return JAWMethods.LOGIN
 
 	# TO-DO
