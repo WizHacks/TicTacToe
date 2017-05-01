@@ -11,6 +11,7 @@ class JAWResponses(object):
 	WINNER 				= "WINNER"
 	PLAYERS 			= "PLAYERS"
 	QUIT 				= "QUIT"
+	OTHER_PLAYER		= "OTHER_PLAYER"
 
 class JAWStatuses(object):
 	OK 					= "OK"
@@ -21,6 +22,7 @@ class JAWStatuses(object):
 	INVALID_MOVE 		= "INVALID_MOVE"
 	GAME_END 			= "GAME_END"
 	USER_QUIT 			= "USER_QUIT"
+	PLEASE_WAIT			= "PLEAE_WAIT"
 
 class JAWStatusNum(object):
 	OK_NUM 				= "200"
@@ -31,6 +33,7 @@ class JAWStatusNum(object):
 	INVALID_MOVE_NUM 	= "405"
 	GAME_END_NUM 		= "201"
 	USER_QUIT_NUM 		= "202"
+	PLEASE_WAIT_NUM		= "406"
 
 class JAWMisc(object):
 	CRNLCRNL 			= "\r\n\r\n"
