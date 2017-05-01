@@ -104,7 +104,7 @@ def processResponse(player, responseList):
 
 		# # OTHER PLAYER
 		# el
-		if player.lastRequestSent == JAWMethods.LOGIN and responseList[3][:responseList[3].find(":")] == JAWResponses.OTHER_PLAYER:
+		if (player.lastRequestSent == JAWMethods.LOGIN or player.lastRequestSent == JAWMethods.PLACE) and responseList[3][:responseList[3].find(":")] == JAWResponses.OTHER_PLAYER:
 			opponent = responseList[3][responseList[3].find(":")+1:]
 			player.isLoggedIn = True
 			print "Logged in successfully at time: ", time.strftime("%b %d %Y %H:%M:%S", time.gmtime(player.timeLoggedIn))
@@ -124,7 +124,7 @@ def processResponse(player, responseList):
 			if player.username == playerTurn:
 				print "Your turn, please place a move:"
 			else:
-				print "Waiting for opponent ..."
+				print "Waiting for opponent move..."
 			
 
 	# What happens if server sends me 400?
