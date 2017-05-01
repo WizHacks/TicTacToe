@@ -12,14 +12,9 @@ class Board(object):
 		boardString = ""
 		for i in range(0, len(self.board)):
 			if self.board[i] == 0:
-				boardString += "_."
+				boardString += "."
 			else:
-				if self.board[i] == 1:
-					boardString += "X"
-				else:
-					boardString += "O"
-			if i % 3 == 2:
-				boardString += "\n"
+				boardString += "X" if self.board[i] == 1 else "O"
 		return boardString
 
 	def gameFinished(self):
