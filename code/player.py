@@ -225,7 +225,6 @@ def checkResponseProtocol(packet):
 				JAWStatuses.GAME_END, JAWStatuses.USER_QUIT]
 	statusBodies = [JAWResponses.PRINT, JAWResponses.PLAYER, JAWResponses.WINNER,
 				JAWResponses.PLAYERS, JAWResponses.QUIT]
-	print "lala:", packet
 	args = []
 	if packet.count(JAWMisc.CRNLCRNL) == 1:
 		args = packet.strip().split()
@@ -321,7 +320,7 @@ if __name__ == "__main__":
 
 	try:
 		while True:
-			events = epoll.poll(1) # file no and event code
+			events = epoll.poll(0.01) # file no and event code
 			for fileno, event in events:
 				if event & select.EPOLLHUP:
 					# epoll.unregister(fileno)
