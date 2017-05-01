@@ -80,17 +80,12 @@ class Player(object):
 	def makeRequest(self, request, arg=None):
 		if request == JAWMethods.LOGIN:
 			self.login()
-		elif request == JAWMethods.PLAY:
-			self.play(arg)
-		elif request == JAWMethods.WHO:
-			self.who()
 		elif request == JAWMethods.PLACE:
 			self.place(arg)
 		elif request == JAWMethods.EXIT:
 			self.exit()
 		elif request == JAWMethods.RETRANSMIT:
 			self.retransmit()
-			print "---------------------------------------------------------"
 		else:
 			print "No such request!"
 
@@ -136,17 +131,6 @@ def processResponse(player, responseList):
 				print "Your turn, please place a move:"
 			else:
 				print "Waiting for opponent ..."
-		# PLAYERS
-		elif player.lastRequestSent == JAWMethods.WHO and responseList[3][:responseList[3].find(":")] == JAWResponses.PLAYERS:
-			playersList = responseList[3][responseList[3].find(":")+1:].split(",")
-			if playersList[0] == "":
-				print "No users online!"
-			else:
-				players = ""
-				for player in playersList:
-					players += player + "\n"
-				print "Users online:\n%s" %(players)
-			
 
 	# What happens if server sends me 400?
 	if responseList[1] == JAWStatusNum.ERROR_NUM and responseList[2] == JAWResponses.ERROR:
@@ -182,6 +166,7 @@ def processResponse(player, responseList):
 		return None	# this means someone won
 
 	if responseList[1] == JAWStatusNum.USER_QUIT_NUM and responseList[2] == JAWStatuses.USER_QUIT and player.lastRequestSent == JAWMethods.EXIT:
+		print "hi"
 		if responseList[3][responseList[3].find(":") + 1:] == player.username:
 			print player.username + "Logging off ..."
 			exit(1)
@@ -248,7 +233,6 @@ def checkResponseProtocol(packet):
 				JAWStatuses.GAME_END, JAWStatuses.USER_QUIT]
 	statusBodies = [JAWResponses.PRINT, JAWResponses.PLAYER, JAWResponses.WINNER,
 				JAWResponses.PLAYERS, JAWResponses.QUIT]
-
 	args = []
 	# print packet
 	# print packet.count(JAWMisc.CRNLCRNL)
@@ -296,11 +280,6 @@ def help():
 	print "\t\t [ 7, 8, 9]"
 	print "\t\t\t- place your symbol at the corresponding poisition labeled in grid above"
 	print "exit\t\t\t- quits the program at any time"
-	print "games\t\t\t- obtains a list of all ongoing games along with their respective gameID and players"
-	print "who\t\t\t- obtains a list of all players available to play"
-	print "play [player] \t\t- challenges the specified player if s/he is available to play"
-	print "observe [gameID]\t- tunes into the the specified game"
-	print "unobserve [gameID]\t- stops receiving incoming data about particular game"
 
 if __name__ == "__main__":
 	# parse commandline arguments
