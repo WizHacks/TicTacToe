@@ -313,7 +313,7 @@ if __name__ == "__main__":
 		stdinfd = sys.stdin.fileno()
 		fl = fcntl.fcntl(stdinfd, fcntl.F_GETFL)
 		fcntl.fcntl(stdinfd, fcntl.F_SETFL, fl | os.O_NONBLOCK)
-		epoll.register(clientSocket.fileno(), select.EPOLLIN)
+		epoll.register(clientSocket.fileno(), select.EPOLLIN | select.EPOLLET)
 		epoll.register(stdinfd, select.EPOLLIN)
 	except socket.error:
 		print "Error connecting to server. Exiting ..."

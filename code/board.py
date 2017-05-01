@@ -46,9 +46,9 @@ class Board(object):
 		if self.board[2] != 0 and self.board[2] == self.board[4] and self.board[2] == self.board[6]:
 			winner = self.board[2]
 
-		if self.board[0] * self.board[1] * self.board[2] * self.board[3] * self.board[4] * self.board[5] * self.board[6] * self.board[7] * self.board[8] > 0:
+		if winner == 0 and self.board[0] * self.board[1] * self.board[2] * self.board[3] * self.board[4] * self.board[5] * self.board[6] * self.board[7] * self.board[8] > 0:
 			print("This game is a draw")
-			return "Draw"
+			return "None"
 		if winner != 0:
 			print((self.player1 if winner != 1 else self.player2) + " has won")
 			return self.player1 if winner != 1 else self.player2
