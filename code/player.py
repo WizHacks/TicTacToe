@@ -146,7 +146,7 @@ def processResponse(player, responseList):
 			print "Congratulations, you won!" if responseList[4] == player.username else "You lost, better luck next time!"
 		return None	# this means someone won
 
-	if responseList[1] == JAWStatusNum.USER_QUIT_NUM and responseList[2] == JAWStatuses.USER_QUIT and player.lastRequestSent == JAWMethods.QUIT:
+	if responseList[1] == JAWStatusNum.USER_QUIT_NUM and responseList[2] == JAWStatuses.USER_QUIT and player.lastRequestSent == JAWResponses.QUIT:
 		print player.username + "Logging off ..."
 		exit(1)
 
