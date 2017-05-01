@@ -225,6 +225,7 @@ def checkResponseProtocol(packet):
 				JAWStatuses.GAME_END, JAWStatuses.USER_QUIT]
 	statusBodies = [JAWResponses.PRINT, JAWResponses.PLAYER, JAWResponses.WINNER,
 				JAWResponses.PLAYERS, JAWResponses.QUIT]
+	print "lala:", packet
 	args = []
 	if packet.count(JAWMisc.CRNLCRNL) == 1:
 		args = packet.strip().split()
