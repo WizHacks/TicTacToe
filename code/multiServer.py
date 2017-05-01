@@ -17,6 +17,7 @@ class Server(object):
 		self.players = {}
 		self.games = {}
 		self.connections = {}
+		self.retransmits = {}
 
 	'''main methods'''
 	def addConnection(self, connection):
@@ -81,6 +82,7 @@ class Server(object):
 			currentGame = self.games[currentPlayer['gameId']]
 			otherPlayer = currentGame.player2 if currentPlayer['username'] != currentGame.player2 else currentGame.player1
 			del self.games[currentPlayer['gameId']]
+			self.retransmits[self.getSocket(otherPlayer)] = ["JAW/1.0 202 USER_QUIT \r\n QUIT:" + currentPlayer['username'] + " \r\n\r\n", "JAW/1.0 201 GAME_END \r\n WINNER:" + otherPlayer + " \r\n\r\n"]
 			self.broadcast("JAW/1.0 202 USER_QUIT \r\n QUIT:" + currentPlayer['username'] + " \r\n\r\n", [fileno, self.getSocket(otherPlayer)])
 			self.broadcast("JAW/1.0 201 GAME_END \r\n WINNER:" + otherPlayer + " \r\n\r\n", [fileno, self.getSocket(otherPlayer)])
 			otherPlayer = self.getPlayer(otherPlayer)
@@ -172,6 +174,7 @@ class Server(object):
 		recurr = request.count('\r\n\r\n')
 		if recurr == 0 or recurr > 1:
 			self.sendMessage("JAW/1.0 400 ERROR \r\n\r\n", fileno)
+			self.retransmits[fileno] = ["JAW/1.0 400 ERROR \r\n\r\n"]
 			return
 		requests = request.split()
 		# LOGIN
@@ -195,21 +198,26 @@ class Server(object):
 					return
 				if self.playerExists(player['username']):
 					self.sendMessage("JAW/1.0 401 USERNAME_TAKEN \r\n\r\n", fileno)
+					self.retransmits[fileno] = ["JAW/1.0 401 USERNAME_TAKEN \r\n\r\n"]
 				else:
 					self.addPlayer(connection, player)
 					self.sendMessage("JAW/1.0 200 OK \r\n\r\n", fileno)
+					self.retransmits[fileno] = ["JAW/1.0 200 OK \r\n\r\n"]
 		# PLACE
 		elif requests[1] == "PLACE":
 			if len(requests) < 3:
 				self.sendMessage("JAW/1.0 400 ERROR \r\n\r\n", fileno)
+				self.retransmits[fileno] = ["JAW/1.0 400 ERROR \r\n\r\n"]
 			else:
 				currentPlayer = self.players[fileno]
 				if currentPlayer['gameId'] == 0 or currentPlayer['gameId'] == None:
 					self.sendMessage("JAW/1.0 405 INVALID_MOVE \r\n\r\n", fileno)
+					self.retransmits[fileno] = ["JAW/1.0 405 INVALID_MOVE \r\n\r\n"]
 					return
 				currentGame = self.games[currentPlayer['gameId']]
 				if currentPlayer['username'] != currentGame.currentPlayer:
 					self.sendMessage("JAW/1.0 405 INVALID_MOVE \r\n\r\n", fileno)
+					self.retransmits[fileno] = ["JAW/1.0 405 INVALID_MOVE \r\n\r\n"]
 					return
 				validMove = currentGame.place(int(requests[2]))
 				if validMove:
@@ -217,29 +225,41 @@ class Server(object):
 					print currentPlayer 
 					print otherPlayer
 					self.broadcast("JAW/1.0 200 OK \r\n PRINT:" + str(currentGame) + " \r\n\r\n", [fileno, self.getSocket(otherPlayer)])
+					self.retransmits[fileno] = ["JAW/1.0 200 OK \r\n PRINT:" + str(currentGame) + " \r\n\r\n"]
+					self.retransmits[self.getSocket(otherPlayer)] = ["JAW/1.0 200 OK \r\n PRINT:" + str(currentGame) + " \r\n\r\n"]
 					results = currentGame.gameFinished()
 					if results != None:
+						self.retransmits[fileno].append("JAW/1.0 201 GAME_END \r\n WINNER:" + results + " \r\n\r\n")
+						self.retransmits[self.getSocket(otherPlayer)].append("JAW/1.0 201 GAME_END \r\n WINNER:" + results + " \r\n\r\n")
 						self.broadcast("JAW/1.0 201 GAME_END \r\n WINNER:" + results + " \r\n\r\n", [fileno, self.getSocket(otherPlayer)])
 						self.endGame(currentPlayer['gameId'], currentPlayer, self.players[self.getSocket(otherPlayer)])
 					else:
 						self.broadcast("JAW/1.0 200 OK \r\n PLAYER:" + currentGame.currentPlayer + " \r\n\r\n", [fileno, self.getSocket(otherPlayer)])
+						self.retransmits[fileno].append("JAW/1.0 200 OK \r\n PLAYER:" + currentGame.currentPlayer + " \r\n\r\n")
+						self.retransmits[self.getSocket(otherPlayer)].append("JAW/1.0 200 OK \r\n PLAYER:" + currentGame.currentPlayer + " \r\n\r\n")
 				else:
 					self.sendMessage("JAW/1.0 405 INVALID_MOVE \r\n\r\n", fileno)
+					self.retransmits[fileno] = ["JAW/1.0 405 INVALID_MOVE \r\n\r\n"]
 		# PLAY
 		elif requests[1] == "PLAY":
 			if len(requests) < 3:
 				self.sendMessage("JAW/1.0 400 ERROR \r\n\r\n", fileno)
+				self.retransmits[fileno] = ["JAW/1.0 400 ERROR \r\n\r\n"]
 			else:
 				otherPlayer = self.getPlayer(requests[2])
 				if otherPlayer == None or otherPlayer['username'] == self.players[fileno]['username']:
 					self.sendMessage("JAW/1.0 403 USER_NOT_FOUND \r\n\r\n", fileno)
+					self.retransmits[fileno] = ["JAW/1.0 403 USER_NOT_FOUND \r\n\r\n"]
 				else:
 					if self.playerAvailable(otherPlayer['username']):
 						game = self.createGame(self.players[fileno], otherPlayer)
+						self.retransmits[fileno] = ["JAW/1.0 200 OK \r\n PRINT:" + str(game) + " \r\n\r\n", "JAW/1.0 200 OK \r\n PLAYER:" + game.currentPlayer + " \r\n\r\n"]
+						self.retransmits[self.getSocket(otherPlayer['username'])] = ["JAW/1.0 200 OK \r\n PRINT:" + str(game) + " \r\n\r\n", "JAW/1.0 200 OK \r\n PLAYER:" + game.currentPlayer + " \r\n\r\n"]
 						self.broadcast("JAW/1.0 200 OK \r\n PRINT:" + str(game) + " \r\n\r\n", [fileno, self.getSocket(otherPlayer['username'])])
 						self.broadcast("JAW/1.0 200 OK \r\n PLAYER:" + game.currentPlayer + " \r\n\r\n", [fileno, self.getSocket(otherPlayer['username'])])
 					else:
 						self.sendMessage("JAW/1.0 402 USER_BUSY \r\n\r\n", fileno)
+						self.retransmits[fileno] = ["JAW/1.0 402 USER_BUSY \r\n\r\n"]
 		# EXIT
 		elif requests[1] == "EXIT":
 			if len(requests) < 2:
@@ -259,7 +279,12 @@ class Server(object):
 						data += p + ","
 				info = "JAW/1.0 200 OK \r\n PLAYERS:" + data[:(len(data)-1)] + " \r\n\r\n"
 				print info
+				self.retransmits[fileno] = [info]
 				self.sendMessage(info, fileno)
+		# RETRANSMIT
+		elif requests[1] == "RETRANSMIT":
+			for v in self.retransmits[fileno]:
+				self.sendMessage(v, fileno)
 		else:
 			self.sendMessage("JAW/1.0 400 ERROR \r\n\r\n", fileno)
 		return

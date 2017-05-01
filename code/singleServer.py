@@ -110,7 +110,7 @@ class Server(object):
 		'''
 		gameId = uuid.uuid4().hex
 		newBoard = None
-		if int(p1['timeLoggedIn']) < int(p2['timeLoggedIn']):
+		if p1['timeLoggedIn'] < p2['timeLoggedIn']:
 			newBoard = board.Board(p1['username'], p2['username'], p1['username'])
 		else
 			newBoard = board.Board(p1['username'], p2['username'], p2['username'])
