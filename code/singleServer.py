@@ -205,8 +205,8 @@ class Server(object):
 					self.retransmits[fileno] = ["JAW/1.0 401 USERNAME_TAKEN \r\n\r\n"]
 				else:
 					self.addPlayer(connection, player)
-					self.sendMessage("JAW/1.0 200 OK \r\n\r\n", fileno)
-					self.retransmits[fileno] = ["JAW/1.0 200 OK \r\n\r\n"]
+					#self.sendMessage("JAW/1.0 200 OK \r\n\r\n", fileno)
+					#self.retransmits[fileno] = ["JAW/1.0 200 OK \r\n\r\n"]
 					if len(self.connections) == 2:
 						otherPlayer = None
 						for key, value in self.players.iteritems():
@@ -214,7 +214,7 @@ class Server(object):
 								otherPlayer = value
 								break
 						game = self.createGame(otherPlayer, player)
-						self.retransmits[fileno].append("JAW/1.0 200 OK \r\n OTHER_PLAYER:" + otherPlayer['username'] + " \r\n\r\n")
+						self.retransmits[fileno] = ["JAW/1.0 200 OK \r\n OTHER_PLAYER:" + otherPlayer['username'] + " \r\n\r\n"]
 						self.retransmits[fileno].append("JAW/1.0 200 OK \r\n PRINT:" + str(game) + " \r\n\r\n")
 						self.retransmits[fileno].append("JAW/1.0 200 OK \r\n PLAYER:" + game.currentPlayer + " \r\n\r\n")
 						self.retransmits[self.getSocket(otherPlayer['username'])] = ["JAW/1.0 200 OK \r\n OTHER_PLAYER:" + player['username'] + " \r\n\r\n", "JAW/1.0 200 OK \r\n PRINT:" + str(game) + " \r\n\r\n", "JAW/1.0 200 OK \r\n PLAYER:" + game.currentPlayer + " \r\n\r\n"]
@@ -224,7 +224,7 @@ class Server(object):
 						self.broadcast("JAW/1.0 200 OK \r\n PLAYER:" + game.currentPlayer + " \r\n\r\n", [fileno, self.getSocket(otherPlayer['username'])])
 					else:
 						self.sendMessage("JAW/1.0 406 PLEASE_WAIT \r\n\r\n", fileno)
-						self.retransmits[fileno].append("JAW/1.0 406 PLEASE_WAIT \r\n\r\n")
+						self.retransmits[fileno] = ["JAW/1.0 406 PLEASE_WAIT \r\n\r\n"]
 		# PLACE
 		elif requests[1] == "PLACE":
 			if len(requests) < 3:
@@ -271,6 +271,10 @@ class Server(object):
 				self.retransmits[fileno] = ["JAW/1.0 400 ERROR \r\n\r\n"]
 			else:
 				self.removePlayer(fileno)
+		# RETRANSMIT
+		elif requests[1] == "RETRANSMIT":
+			for v in self.retransmits[fileno]:
+				self.sendMessage(v, fileno)
 		else:
 			self.sendMessage("JAW/1.0 400 ERROR \r\n\r\n", fileno)
 			self.retransmits[fileno] = ["JAW/1.0 400 ERROR \r\n\r\n"]
