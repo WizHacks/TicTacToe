@@ -117,7 +117,7 @@ def processResponse(player, responseList):
 	if responseList[1] == JAWStatusNum.OK_NUM and responseList[2] == JAWStatuses.OK:
 		print "Last request: " + player.lastRequestSent
 		# LOGIN
-		if player.lastRequestSent == JAWMethods.LOGIN:
+		if len(responseList) == 3 and player.lastRequestSent == JAWMethods.LOGIN:
 			player.isLoggedIn = True
 			print "Logged in successfully at time: ", time.strftime("%b %d %Y %H:%M:%S", time.gmtime(player.timeLoggedIn))
 		# PRINT
@@ -131,6 +131,7 @@ def processResponse(player, responseList):
 			if player.username == playerTurn:
 				print "Your turn, please place a move:"
 		# PLAYERS
+
 		# WINNER
 
 	# What happens if server sends me 400?
@@ -179,12 +180,13 @@ def processStdin(stdinInput):
 			print "You have already logged in"
 		else:
 			while True:
-				print "log in?"
-				sys.stdout.flush()
-				username = raw_input("")
-				if checkUsername(username):
-					break
-				print "Username must not contain any spaces!"
+				try:
+					username = raw_input("")
+					if checkUsername(username):
+						break
+					print "Username must not contain any spaces!"
+				except EOFError:
+					continue
 			player.username = username
 			player.makeRequest(JAWMethods.LOGIN)
 	elif args[0] == "exit":
@@ -193,9 +195,11 @@ def processStdin(stdinInput):
 		player.makeRequest(JAWMethods.WHO)
 	elif args[0] == "play":
 		player.makeRequest(JAWMethods.PLAY, arg=args[1])
+		print "Waiting for server ..."
 	elif args[0] == "place":
 		if len(args) == 2 and len(args[1]) == 1 and args[1][0] > '0' and args[1][0] <= '9':
 			player.makeRequest(JAWMethods.PLACE, args[1][0])
+			print "Waiting for opponent ..."
 		else:
 			print "Invalid number of arguments\nExpected: place [index]\t [ 1, 2, 3]"
 			print "\t\t\t [ 4, 5, 6]"
