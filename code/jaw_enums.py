@@ -4,6 +4,7 @@ class JAWMethods(object):
 	PLAY 				= "PLAY"
 	EXIT 				= "EXIT"
 	WHO 				= "WHO"
+	RETRANSMIT			= "RETRANSMIT"
 
 class JAWResponses(object):
 	PRINT 				= "PRINT"
