@@ -139,13 +139,13 @@ def processResponse(player, responseList):
 		# PLAYERS
 		elif player.lastRequestSent == JAWMethods.WHO and responseList[3][:responseList[3].find(":")] == JAWResponses.PLAYERS:
 			playersList = responseList[3][responseList[3].find(":")+1:].split(",")
-			if len(playersList) == 0:
+			if playersList[0] == "":
 				print "No users online!"
 			else:
 				players = ""
 				for player in playersList:
-					players += players
-				print "Users online: %s" %(players)
+					players += player + "\n"
+				print "Users online:\n%s" %(players)
 			
 
 	# What happens if server sends me 400?
@@ -182,7 +182,6 @@ def processResponse(player, responseList):
 		return None	# this means someone won
 
 	if responseList[1] == JAWStatusNum.USER_QUIT_NUM and responseList[2] == JAWStatuses.USER_QUIT and player.lastRequestSent == JAWMethods.EXIT:
-		print "hi"
 		if responseList[3][responseList[3].find(":") + 1:] == player.username: 
 			print player.username + "Logging off ..."
 			exit(1)
