@@ -27,7 +27,7 @@ class Player(object):
 		Log the player into the server denoted by server
 		'''
 		print "Login in progress ..."
-		player.timeLoggedIn = time.time()		
+		player.timeLoggedIn = time.time()
 		json_data = json.dumps(self.createPlayerDictionary())
 		message = JAWMisc.JAW + " " + JAWMethods.LOGIN + " " + json_data + " " + JAWMisc.CRNLCRNL
 		self.lastRequestSent = JAWMethods.LOGIN
@@ -126,10 +126,10 @@ def processResponse(player, responseList):
 	if responseList[1] == JAWStatusNum.OK_NUM and responseList[2] == JAWStatuses.OK:
 		print "Last request: " + player.lastRequestSent
 		# LOGIN
-		if len(responseList) == 3 and player.lastRequestSent == JAWMethods.LOGIN:			
+		if len(responseList) == 3 and player.lastRequestSent == JAWMethods.LOGIN:
 			player.isLoggedIn = True
 			print "Logged in successfully at time: ", time.strftime("%b %d %Y %H:%M:%S", time.gmtime(player.timeLoggedIn))
-		# PRINT	
+		# PRINT
 		elif (player.lastRequestSent == JAWMethods.PLACE or player.lastRequestSent == JAWMethods.LOGIN or player.lastRequestSent == JAWMethods.PLAY) and responseList[3][:responseList[3].find(":")] == JAWResponses.PRINT:
 			print "board"
 			board = responseList[3][responseList[3].find(":")+1:]
@@ -143,15 +143,7 @@ def processResponse(player, responseList):
 			else:
 				print "Waiting for opponent ..."
 		# PLAYERS
-		
-		# # WINNER
-		# elif (player.lastRequestSent == JAWMethods.PLACE or player.lastRequestSent == JAWMethods.PLAY) and responseList[3][:responseList[3].find(":")] == JAWResponses.WINNER:
-		# 	winner = responseList[3][responseList[3].find(":")+1:]
-		# 	if player.username == winner:
-		# 		print "Congratulations, you are the victor!"
-		# 	else:
-		# 		print "Failure is not the end, better luck next time!"		
- 
+
 	# What happens if server sends me 400?
 	if responseList[1] == JAWStatusNum.ERROR_NUM and responseList[2] == JAWResponses.ERROR:
 		print "Server sent a 400 ERROR"
@@ -237,7 +229,7 @@ def processStdin(stdinInput):
 		if  args[1] == player.username:
 			print "Cannot play yourself!"
 		elif len(args) == 2 and checkUsername(args[1]):
-			player.makeRequest(JAWMethods.PLAY, args[1])		
+			player.makeRequest(JAWMethods.PLAY, args[1])
 	# elif args[0] == "observe":
 	# 	print "if len(args) == 2"
 	else:
@@ -253,6 +245,7 @@ def checkResponseProtocol(packet):
 				JAWStatuses.GAME_END, JAWStatuses.USER_QUIT]
 	statusBodies = [JAWResponses.PRINT, JAWResponses.PLAYER, JAWResponses.WINNER,
 				JAWResponses.PLAYERS, JAWResponses.QUIT]
+	print "lala:", packet
 	args = []
 	# print packet
 	# print packet.count(JAWMisc.CRNLCRNL)
