@@ -118,11 +118,7 @@ def processResponse(player, responseList):
 		# PLAYER
 		elif (player.lastRequestSent == JAWMethods.PLACE or player.lastRequestSent == JAWMethods.LOGIN) and responseList[3][:responseList[3].find(":")] == JAWResponses.PLAYER:
 			playerTurn = responseList[3][responseList[3].find(":")+1:]
-			if player.username == playerTurn:
-				print "Your turn, please place a move:"
-			else:
-				print "Waiting for opponent ..."
-			
+			print "Please place a move:" if player.username == playerTurn else "Waiting for opponent's move ..."
 
 	# What happens if server sends me 400?
 	if responseList[1] == JAWStatusNum.ERROR_NUM and responseList[2] == JAWStatuses.ERROR:
@@ -188,7 +184,7 @@ def processStdin(stdinInput):
 			print "Invalid number of arguments\nExpected: place [index]\t [ 1, 2, 3]"
 			print "\t\t\t [ 4, 5, 6]"
 			print "\t\t\t [ 7, 8, 9]"
-			print "\t\t\t\t- place your symbol at the corresponding poisition labeled in grid above"	
+			print "\t\t\t\t- place your symbol at the corresponding poisition labeled in grid above"
 	# elif args[0] == "observe":
 	# 	print "if len(args) == 2"
 	else:
@@ -203,13 +199,17 @@ def checkResponseProtocol(packet):
 				JAWStatuses.INVALID_MOVE, JAWStatuses.PLEASE_WAIT,
 				JAWStatuses.GAME_END, JAWStatuses.USER_QUIT]
 	statusBodies = [JAWResponses.PRINT, JAWResponses.PLAYER, JAWResponses.WINNER,
-				JAWResponses.QUIT]
+				JAWResponses.QUIT, JAWResponses.OTHER_PLAYER]
 
 	args = []
 	# print packet
 	# print packet.count(JAWMisc.CRNLCRNL)
-	if packet.count(JAWMisc.CRNLCRNL) == 1:
-		args = packet.strip().split()
+	print "lala: (", packet,")"
+	for pk in packet.split(JAWMisc.CRNLCRNL):
+		if pk == "":
+			break
+		print "pk <", pk, ">"
+		args = pk.strip().split() if packet.count(JAWMisc.CRNLCRNL) > 1 else packet.strip().split()
 		print "args: ", args
 		if args[0] != JAWMisc.JAW:
 			print "Invalid format -> required protocol to begin with JAW/1.0"
@@ -223,7 +223,7 @@ def checkResponseProtocol(packet):
 			print "Invalid status code\nExpected:OK,ERROR,USERNAME_TAKEN,",
 			print "INVALID_MOVE,GAME_END,USER_QUIT,PLEASE_WAIT\nFound: ", args[2]
 			return None
-		if packet.count(JAWMisc.CRNL) == 3:
+		if pk.count(JAWMisc.CRNL) == 1:
 			if len(args) != 4:
 				print "Invalid protocol length"
 				return None
@@ -301,6 +301,8 @@ if __name__ == "__main__":
 	try:
 		while True:
 			events = epoll.poll(0.01) # file no and event code
+			if events == "":
+				break
 			for fileno, event in events:
 				if event & select.EPOLLHUP:
 					# epoll.unregister(fileno)
