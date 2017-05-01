@@ -65,7 +65,14 @@ class Server(object):
 		Removes the specified player
 		@param fileno File descriptor associated with user
 		'''
-		currentPlayer = self.players[fileno]
+		try:
+			currentPlayer = self.players[fileno]
+		except Exception:
+			fNum = fileno
+			epoll.unregister(fileno)
+			self.connections[fNum].close()
+			del self.connections[fNum]
+			return
 		# Player is not in game
 		if currentPlayer['status'] == True:
 			self.sendMessage("JAW/1.0 202 USER_QUIT \r\n QUIT:" + currentPlayer['username'] + " \r\n\r\n", fileno)
@@ -73,7 +80,10 @@ class Server(object):
 			epoll.unregister(fileno)
 			self.connections[fNum].close()
 			del self.connections[fNum]
-			del self.players[fNum]
+			try:
+				del self.players[fNum]
+			except Exception:
+				print "Username was taken. No big deal."
 		# Player is in game
 		else:
 			if currentPlayer['gameId'] == None:
