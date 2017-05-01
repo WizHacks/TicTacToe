@@ -89,16 +89,10 @@ class Player(object):
 		elif request == JAWMethods.EXIT:
 			self.exit()
 		elif request == JAWMethods.RETRANSMIT:
-			self.retransmit()
+			self.retransmit()  
+			print "---------------------------------------------------------"
 		else:
 			print "No such request!"
-
-	def printBoard(self, board):
-		'''
-		Display the current game board state
-		@param board a list of board indices
-		'''
-		print board
 
 	def sendMessage(self, message):
 		'''
@@ -143,6 +137,16 @@ def processResponse(player, responseList):
 			else:
 				print "Waiting for opponent ..."
 		# PLAYERS
+		elif player.lastRequestSent == JAWMethods.WHO and responseList[3][:responseList[3].find(":")] == JAWResponses.PLAYERS:
+			playersList = responseList[3][responseList[3].find(":")+1:].split(",")
+			if len(playersList) == 0:
+				print "No users online!"
+			else:
+				players = ""
+				for player in playersList:
+					players += players
+				print "Users online: %s" %(players)
+			
 
 	# What happens if server sends me 400?
 	if responseList[1] == JAWStatusNum.ERROR_NUM and responseList[2] == JAWResponses.ERROR:
@@ -245,7 +249,7 @@ def checkResponseProtocol(packet):
 				JAWStatuses.GAME_END, JAWStatuses.USER_QUIT]
 	statusBodies = [JAWResponses.PRINT, JAWResponses.PLAYER, JAWResponses.WINNER,
 				JAWResponses.PLAYERS, JAWResponses.QUIT]
-	print "lala:", packet
+	print "packet:", packet
 	args = []
 	# print packet
 	# print packet.count(JAWMisc.CRNLCRNL)
