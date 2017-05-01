@@ -134,7 +134,7 @@ def processResponse(player, responseList):
 			if player.username == playerTurn:
 				print "Your turn, please place a move:"
 			else:
-				print "Waiting for opponent ..."
+				print "Waiting for opponent move..."
 		# PLAYERS
 		elif player.lastRequestSent == JAWMethods.WHO and responseList[3][:responseList[3].find(":")] == JAWResponses.PLAYERS:
 			playersList = responseList[3][responseList[3].find(":")+1:].split(",")
