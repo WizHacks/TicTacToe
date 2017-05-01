@@ -222,18 +222,14 @@ def processStdin(stdinInput):
 			player.makeRequest(JAWMethods.PLAY, arg=args[1])
 			print "Waiting for server ..."
 	elif args[0] == "place":
-		if len(args) == 2 and len(args[1]) == 1 and args[1][0] > '0' and args[1][0] <= '9':
-			player.makeRequest(JAWMethods.PLACE, args[1][0])
-		else:
-			print "Invalid number of arguments\nExpected: place [index]\t [ 1, 2, 3]"
-			print "\t\t\t [ 4, 5, 6]"
-			print "\t\t\t [ 7, 8, 9]"
-			print "\t\t\t\t- place your symbol at the corresponding poisition labeled in grid above"
-	elif args[0] == "play":
-		if  args[1] == player.username:
-			print "Cannot play yourself!"
-		elif len(args) == 2 and checkUsername(args[1]):
-			player.makeRequest(JAWMethods.PLAY, args[1])
+		if not player.status:
+			if len(args) == 2 and len(args[1]) == 1 and args[1][0] > '0' and args[1][0] <= '9':
+				player.makeRequest(JAWMethods.PLACE, args[1][0])
+			else:
+				print "Invalid number of arguments\nExpected: place [index]\t [ 1, 2, 3]"
+				print "\t\t\t [ 4, 5, 6]"
+				print "\t\t\t [ 7, 8, 9]"
+				print "\t\t\t\t- place your symbol at the corresponding poisition labeled in grid above"		
 	# elif args[0] == "observe":
 	# 	print "if len(args) == 2"
 	else:

@@ -143,10 +143,13 @@ def processResponse(player, responseList):
 	if responseList[1] == JAWStatusNum.GAME_END_NUM and responseList[2] == JAWStatuses.GAME_END and responseList[3][:responseList[3].find(":")] == JAWResponses.WINNER:
 		if responseList[3][responseList[3].find(":") + 1:] == player.username:
 			print "Congratulations, you won!"
+			print "Please wait ... searching for opponents"
 		elif responseList[3][responseList[3].find(":") + 1:] == "None":
 			print "Game is a draw!"
+			print "Please wait ... searching for opponents"
 		else:
 			print "You lost, better luck next time!"
+			print "Please wait ... searching for opponents"
 		player.status = True
 		return None	# this means someone won
 
@@ -182,13 +185,14 @@ def processStdin(stdinInput):
 	elif args[0] == "exit":
 		player.makeRequest(JAWMethods.EXIT)
 	elif args[0] == "place":
-		if len(args) == 2 and len(args[1]) == 1 and args[1][0] > '0' and args[1][0] <= '9':
-			player.makeRequest(JAWMethods.PLACE, args[1][0])
-		else:
-			print "Invalid number of arguments\nExpected: place [index]\t [ 1, 2, 3]"
-			print "\t\t\t [ 4, 5, 6]"
-			print "\t\t\t [ 7, 8, 9]"
-			print "\t\t\t\t- place your symbol at the corresponding poisition labeled in grid above"
+		if not player.status:
+			if len(args) == 2 and len(args[1]) == 1 and args[1][0] > '0' and args[1][0] <= '9':
+				player.makeRequest(JAWMethods.PLACE, args[1][0])
+			else:
+				print "Invalid number of arguments\nExpected: place [index]\t [ 1, 2, 3]"
+				print "\t\t\t [ 4, 5, 6]"
+				print "\t\t\t [ 7, 8, 9]"
+				print "\t\t\t\t- place your symbol at the corresponding poisition labeled in grid above"
 	# elif args[0] == "observe":
 	# 	print "if len(args) == 2"
 	else:
@@ -233,13 +237,9 @@ def checkResponseProtocol(packet):
 		if args[2] not in statusCodes:
 			print "Invalid status code\nExpected:OK,ERROR,USERNAME_TAKEN,",
 			print "INVALID_MOVE,GAME_END,USER_QUIT,PLEASE_WAIT\nFound: ", args[2]
-# <<<<<<< HEAD
-# 			return None
-# 		if pk.count(JAWMisc.CRNL) == 1:
-# =======
+
 			return [1], [1]
 		if packet.count(JAWMisc.CRNL) == 3:
-#>>>>>>> 5a9c346542419b7b09e832ba2a31bac77ae74cfe
 			if len(args) != 4:
 				print "Invalid protocol length"
 				return [1], [1]
