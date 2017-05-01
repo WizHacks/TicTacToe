@@ -88,7 +88,6 @@ class Player(object):
 			self.place(arg)
 		elif request == JAWMethods.EXIT:
 			self.exit()
-			exit(0)
 		elif request == JAWMethods.RETRANSMIT:
 			self.retransmit()
 			print "---------------------------------------------------------"
@@ -150,7 +149,7 @@ def processResponse(player, responseList):
 
 
 	# What happens if server sends me 400?
-	if responseList[1] == JAWStatusNum.ERROR_NUM and responseList[2] == JAWResponses.ERROR:
+	if responseList[1] == JAWStatusNum.ERROR_NUM and responseList[2] == JAWStatuses.ERROR:
 		print "Server sent a 400 ERROR"
 		exit(1)
 
@@ -364,7 +363,7 @@ if __name__ == "__main__":
 						exit(1)
 					args = checkResponseProtocol(response)
 					# print "ARGS: ",args
-					if len(args) != None and len(args) != 0:
+					if args != None and len(args) != 0:
 						action = processResponse(player, args)
 						if action != None:
 							processStdin(action)

@@ -23,7 +23,7 @@ class JAWStatuses(object):
 	INVALID_MOVE 		= "INVALID_MOVE"
 	GAME_END 			= "GAME_END"
 	USER_QUIT 			= "USER_QUIT"
-	PLEASE_WAIT			= "PLEAE_WAIT"
+	PLEASE_WAIT			= "PLEASE_WAIT"
 
 class JAWStatusNum(object):
 	OK_NUM 				= "200"

@@ -141,16 +141,6 @@ def processResponse(player, responseList):
 		print "Username as been taken, please enter another name:"
 		return JAWMethods.LOGIN.lower()
 
-	if responseList[1] == JAWStatusNum.USER_BUSY_NUM and responseList[2] == JAWStatuses.USER_BUSY and player.lastRequestSent == JAWMethods.PLAY:
-		print "Opponent %s is busy!" %(player.opponent)
-		player.opponent = None
-		return None
-
-	if responseList[1] == JAWStatusNum.USER_NOT_FOUND_NUM and responseList[2] == JAWStatuses.USER_NOT_FOUND and player.lastRequestSent == JAWMethods.PLAY:
-		print "Opponent %s does not exist!" %(player.opponent)
-		player.opponent = None
-		return None
-
 	if responseList[1] == JAWStatusNum.INVALID_MOVE_NUM and responseList[2] == JAWStatuses.INVALID_MOVE and player.lastRequestSent == JAWMethods.PLACE:
 		print "Invalid move: %s" %(player.move)
 		return None
@@ -166,9 +156,8 @@ def processResponse(player, responseList):
 		return None	# this means someone won
 
 	if responseList[1] == JAWStatusNum.USER_QUIT_NUM and responseList[2] == JAWStatuses.USER_QUIT and player.lastRequestSent == JAWMethods.EXIT:
-		print "hi"
 		if responseList[3][responseList[3].find(":") + 1:] == player.username:
-			print player.username + "Logging off ..."
+			print player.username + " Logging off ..."
 			exit(1)
 
 def processStdin(stdinInput):
@@ -248,8 +237,8 @@ def checkResponseProtocol(packet):
 			print "Invalid status number\nExpected: number\nFound: ", args[1]
 			return None
 		if args[2] not in statusCodes:
-			print "Invalid status code\nExpected:OK,ERROR,USERNAME_TAKEN,USER_BUSY,USER_NOT_FOUND,",
-			print "INVALID_MOVE,GAME_END,USER_QUIT\n Found: ", args[2]
+			print "Invalid status code\nExpected:OK,ERROR,USERNAME_TAKEN,",
+			print "INVALID_MOVE,GAME_END,USER_QUIT,PLEASE_WAIT\nFound: ", args[2]
 			return None
 		if packet.count(JAWMisc.CRNL) == 3:
 			if len(args) != 4:
@@ -341,7 +330,7 @@ if __name__ == "__main__":
 						exit(1)
 					args = checkResponseProtocol(response)
 					# print "ARGS: ",args
-					if len(args) != None and len(args) != 0:
+					if args != None and len(args) != 0:
 						action = processResponse(player, args)
 						if action != None:
 							processStdin(action)
