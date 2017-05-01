@@ -125,7 +125,6 @@ def processResponse(player, responseList):
 			print "Logged in successfully at time: ", time.strftime("%b %d %Y %H:%M:%S", time.gmtime(player.timeLoggedIn))
 		# PRINT
 		elif (player.lastRequestSent == JAWMethods.PLACE or player.lastRequestSent == JAWMethods.LOGIN or player.lastRequestSent == JAWMethods.PLAY) and responseList[3][:responseList[3].find(":")] == JAWResponses.PRINT:
-			print "board"
 			board = responseList[3][responseList[3].find(":")+1:]
 			print board[:3] + "\n" + board[3:6] + "\n" + board[6:]
 			player.status = False
@@ -149,7 +148,7 @@ def processResponse(player, responseList):
 			
 
 	# What happens if server sends me 400?
-	if responseList[1] == JAWStatusNum.ERROR_NUM and responseList[2] == JAWResponses.ERROR:
+	if responseList[1] == JAWStatusNum.ERROR_NUM and responseList[2] == JAWStatuses.ERROR:
 		print "Server sent a 400 ERROR"
 		exit(1)
 
@@ -217,6 +216,8 @@ def processStdin(stdinInput):
 	elif args[0] == "play":
 		if player.status == False:
 			print "Already in a game!"
+		elif args[1] == player.username:
+			print "Cannot play yourself!"
 		else:
 			player.makeRequest(JAWMethods.PLAY, arg=args[1])
 			print "Waiting for server ..."
@@ -362,7 +363,7 @@ if __name__ == "__main__":
 						exit(1)
 					args = checkResponseProtocol(response)
 					# print "ARGS: ",args
-					if len(args) != None and len(args) != 0:
+					if args != None and len(args) != 0:
 						action = processResponse(player, args)
 						if action != None:
 							processStdin(action)
