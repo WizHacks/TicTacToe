@@ -88,6 +88,7 @@ class Player(object):
 			self.place(arg)
 		elif request == JAWMethods.EXIT:
 			self.exit()
+			exit(0)
 		elif request == JAWMethods.RETRANSMIT:
 			self.retransmit()
 			print "---------------------------------------------------------"
