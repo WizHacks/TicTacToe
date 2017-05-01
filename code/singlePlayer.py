@@ -121,6 +121,7 @@ def processResponse(player, responseList):
 		# PLAYER
 		elif (player.lastRequestSent == JAWMethods.PLACE or player.lastRequestSent == JAWMethods.LOGIN) and responseList[3][:responseList[3].find(":")] == JAWResponses.PLAYER:
 			playerTurn = responseList[3][responseList[3].find(":")+1:]
+
 			if player.username == playerTurn:
 				print "Your turn, please place a move:"
 			else:
@@ -196,7 +197,7 @@ def processStdin(stdinInput):
 				print "Invalid number of arguments\nExpected: place [index]\t [ 1, 2, 3]"
 				print "\t\t\t [ 4, 5, 6]"
 				print "\t\t\t [ 7, 8, 9]"
-				print "\t\t\t\t- place your symbol at the corresponding poisition labeled in grid above"	
+				print "\t\t\t\t- place your symbol at the corresponding poisition labeled in grid above"
 	# elif args[0] == "observe":
 	# 	print "if len(args) == 2"
 	else:
@@ -230,6 +231,7 @@ def checkResponseProtocol(packet):
 		if args[2] not in statusCodes:
 			print "Invalid status code\nExpected:OK,ERROR,USERNAME_TAKEN,",
 			print "INVALID_MOVE,GAME_END,USER_QUIT,PLEASE_WAIT\nFound: ", args[2]
+
 			return [1], [1]
 		if packet.count(JAWMisc.CRNL) == 3:
 			if len(args) != 4:

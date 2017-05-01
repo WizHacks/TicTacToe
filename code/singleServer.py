@@ -1,5 +1,5 @@
 from socket import *
-import select, uuid, board, json
+import select, uuid, board, json, time
 #import player
 
 serverSocket = socket(AF_INET, SOCK_STREAM)
@@ -183,7 +183,8 @@ class Server(object):
 		requests = request.split()
 		# LOGIN
 		if requests[1] == "LOGIN":
-			if len(requests) < 3 or len(self.connections) >= 2:
+			print "Number of players: " + str(len(self.connections))
+			if len(requests) < 3 or len(self.connections) > 2:
 				self.sendMessage("JAW/1.0 400 ERROR \r\n\r\n", fileno)
 				fNum = fileno
 				epoll.unregister(fileno)
@@ -251,12 +252,22 @@ class Server(object):
 					self.broadcast("JAW/1.0 200 OK \r\n PRINT:" + str(currentGame) + " \r\n\r\n", [fileno, self.getSocket(otherPlayer)])
 					results = currentGame.gameFinished()
 					if results != None:
-						# epoll.modify(fileno, select.EPOLLOUT)
-						# epoll.modify(self.getSocket(otherPlayer), select.EPOLLOUT)
 						self.retransmits[fileno] .append("JAW/1.0 201 GAME_END \r\n WINNER:" + results + " \r\n\r\n")
-						self.retransmits[self.getSocket(otherPlayer)] .append("JAW/1.0 201 GAME_END \r\n WINNER:" + results + " \r\n\r\n")
+						self.retransmits[self.getSocket(otherPlayer)].append("JAW/1.0 201 GAME_END \r\n WINNER:" + results + " \r\n\r\n")
 						self.broadcast("JAW/1.0 201 GAME_END \r\n WINNER:" + results + " \r\n\r\n", [fileno, self.getSocket(otherPlayer)])
 						self.endGame(currentPlayer['gameId'], currentPlayer, self.players[self.getSocket(otherPlayer)])
+						time.sleep(3)
+						#Automatically start a new game
+						otherPlayer = self.getPlayer(otherPlayer)
+						game = self.createGame(otherPlayer, currentPlayer)
+						self.retransmits[fileno] = ["JAW/1.0 200 OK \r\n OTHER_PLAYER:" + otherPlayer['username'] + " \r\n\r\n"]
+						self.retransmits[fileno].append("JAW/1.0 200 OK \r\n PRINT:" + str(game) + " \r\n\r\n")
+						self.retransmits[fileno].append("JAW/1.0 200 OK \r\n PLAYER:" + game.currentPlayer + " \r\n\r\n")
+						self.retransmits[self.getSocket(otherPlayer['username'])] = ["JAW/1.0 200 OK \r\n OTHER_PLAYER:" + currentPlayer['username'] + " \r\n\r\n", "JAW/1.0 200 OK \r\n PRINT:" + str(game) + " \r\n\r\n", "JAW/1.0 200 OK \r\n PLAYER:" + game.currentPlayer + " \r\n\r\n"]
+						self.sendMessage("JAW/1.0 200 OK \r\n OTHER_PLAYER:" + otherPlayer['username'] + " \r\n\r\n", fileno)
+						self.sendMessage("JAW/1.0 200 OK \r\n OTHER_PLAYER:" + currentPlayer['username'] + " \r\n\r\n", self.getSocket(otherPlayer['username']))
+						self.broadcast("JAW/1.0 200 OK \r\n PRINT:" + str(game) + " \r\n\r\n", [fileno, self.getSocket(otherPlayer['username'])])
+						self.broadcast("JAW/1.0 200 OK \r\n PLAYER:" + game.currentPlayer + " \r\n\r\n", [fileno, self.getSocket(otherPlayer['username'])])
 					else:
 						self.broadcast("JAW/1.0 200 OK \r\n PLAYER:" + currentGame.currentPlayer + " \r\n\r\n", [fileno, self.getSocket(otherPlayer)])
 						self.retransmits[fileno] .append("JAW/1.0 200 OK \r\n PLAYER:" + currentGame.currentPlayer + " \r\n\r\n")
@@ -307,7 +318,7 @@ server = Server()
 if __name__ == '__main__':
 	try:
 		while True:
-			events = epoll.poll(0.01)
+			events = epoll.poll(1)
 			for fileno, event in events:
 				if fileno == serverSocket.fileno():
 					# new epoll connection
