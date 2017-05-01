@@ -132,7 +132,7 @@ def processResponse(player, responseList):
 		player.opponent = None
 		return None
 
-	if responseList[1] == JAWStatusNum.USER_NOT_FOUND_NUM and responseList[2] == JAWResponses.USER_NOT_FOUND and player.lastRequestSent == JAWMethods.PLAY:
+	if responseList[1] == JAWStatusNum.USER_NOT_FOUND_NUM and responseList[2] == JAWStatuses.USER_NOT_FOUND and player.lastRequestSent == JAWMethods.PLAY:
 		print "Opponent %s does not exist!" %(player.opponent)
 		player.opponent = None
 		return None
@@ -141,12 +141,12 @@ def processResponse(player, responseList):
 		print "Invalid move: %s" %(player.move)
 		return None
 
-	if responseList[1] == JAWStatusNum.GAME_END_NUM and responseList[2] == JAWResponses.GAME_END:
+	if responseList[1] == JAWStatusNum.GAME_END_NUM and responseList[2] == JAWStatuses.GAME_END:
 		if responseList[3] == JAWResponses.WINNER:
 			print "Congratulations, you won!" if responseList[4] == player.username else "You lost, better luck next time!"
 		return None	# this means someone won
 
-	if responseList[1] == JAWStatusNum.USER_QUIT_NUM and responseList[2] == JAWResponses.USER_QUIT and player.lastRequestSent == JAWMethods.QUIT:
+	if responseList[1] == JAWStatusNum.USER_QUIT_NUM and responseList[2] == JAWStatuses.USER_QUIT and player.lastRequestSent == JAWMethods.QUIT:
 		print player.username + "Logging off ..."
 		exit(1)
 
@@ -179,7 +179,7 @@ def processStdin(stdinInput):
 		player.makeRequest(JAWMethods.PLAY, arg=args[1])
 	elif args[0] == "place":
 		if len(args) == 2 and len(args[1]) == 1 and args[1][0] > '0' and args[1][0] <= '9':
-			player.makeRequest(JAWMethods.PLACE, args[1][0] - '0')
+			player.makeRequest(JAWMethods.PLACE, args[1][0])
 		else:
 			print "Invalid number of arguments\nExpected: place [index]"
 			print "\t [ 1, 2, 3]\n\t\t\t [ 4, 5, 6]\n\t\t\t [ 7, 8, 9]"
