@@ -97,14 +97,17 @@ def processResponse(player, responseList):
 	'''
 	if responseList[1] == JAWStatusNum.OK_NUM and responseList[2] == JAWStatuses.OK:
 		print "Last request: " + player.lastRequestSent
-		# LOGIN
-		if len(responseList) == 3 and player.lastRequestSent == JAWMethods.LOGIN:
+		# # LOGIN
+		# if len(responseList) == 3 and player.lastRequestSent == JAWMethods.LOGIN:
+		# 	player.isLoggedIn = True
+		# 	print "Logged in successfully at time: ", time.strftime("%b %d %Y %H:%M:%S", time.gmtime(player.timeLoggedIn))
+
+		# # OTHER PLAYER
+		# el
+		if player.lastRequestSent == JAWMethods.LOGIN and responseList[3][:responseList[3].find(":")] == JAWResponses.OTHER_PLAYER:
+			opponent = responseList[3][responseList[3].find(":")+1:]
 			player.isLoggedIn = True
 			print "Logged in successfully at time: ", time.strftime("%b %d %Y %H:%M:%S", time.gmtime(player.timeLoggedIn))
-
-		# OTHER PLAYER
-		elif player.lastRequestSent == JAWMethods.LOGIN and responseList[3][:responseList[3].find(":")] == JAWResponses.OTHER_PLAYER:
-			opponent = responseList[3][responseList[3].find(":")+1:]
 			print "Your opponent is: " + opponent
 			player.opponent = opponent
 			player.status = False
@@ -123,6 +126,7 @@ def processResponse(player, responseList):
 	# What happens if server sends me 400?
 	if responseList[1] == JAWStatusNum.ERROR_NUM and responseList[2] == JAWStatuses.ERROR:
 		print "Server sent a 400 ERROR"
+		print "Please try again later!"
 		exit(1)
 
 	if responseList[1] == JAWStatusNum.PLEASE_WAIT_NUM and responseList[2] == JAWStatuses.PLEASE_WAIT:
@@ -202,41 +206,92 @@ def checkResponseProtocol(packet):
 				JAWResponses.QUIT, JAWResponses.OTHER_PLAYER]
 
 	args = []
-	# print packet
-	# print packet.count(JAWMisc.CRNLCRNL)
-	print "lala: (", packet,")"
-	for pk in packet.split(JAWMisc.CRNLCRNL):
-		if pk == "":
-			break
-		print "pk <", pk, ">"
-		args = pk.strip().split() if packet.count(JAWMisc.CRNLCRNL) > 1 else packet.strip().split()
+# <<<<<<< HEAD
+# 	# print packet
+# 	# print packet.count(JAWMisc.CRNLCRNL)
+# 	print "lala: (", packet,")"
+# 	for pk in packet.split(JAWMisc.CRNLCRNL):
+# 		if pk == "":
+# 			break
+# 		print "pk <", pk, ">"
+# 		args = pk.strip().split() if packet.count(JAWMisc.CRNLCRNL) > 1 else packet.strip().split()
+# =======
+	print packet
+	print packet.count(JAWMisc.CRNLCRNL)
+	if packet.count(JAWMisc.CRNLCRNL) == 1:
+		args = packet.strip().split()
+#>>>>>>> 5a9c346542419b7b09e832ba2a31bac77ae74cfe
 		print "args: ", args
 		if args[0] != JAWMisc.JAW:
 			print "Invalid format -> required protocol to begin with JAW/1.0"
-			return None
+			return [1], [1]
 		try:
 			int(args[1])
 		except ValueError:
 			print "Invalid status number\nExpected: number\nFound: ", args[1]
-			return None
+			return [1], [1]
 		if args[2] not in statusCodes:
 			print "Invalid status code\nExpected:OK,ERROR,USERNAME_TAKEN,",
 			print "INVALID_MOVE,GAME_END,USER_QUIT,PLEASE_WAIT\nFound: ", args[2]
-			return None
-		if pk.count(JAWMisc.CRNL) == 1:
+# <<<<<<< HEAD
+# 			return None
+# 		if pk.count(JAWMisc.CRNL) == 1:
+# =======
+			return [1], [1]
+		if packet.count(JAWMisc.CRNL) == 3:
+#>>>>>>> 5a9c346542419b7b09e832ba2a31bac77ae74cfe
 			if len(args) != 4:
 				print "Invalid protocol length"
-				return None
+				return [1], [1]
 			else:
 				if args[3][0:args[3].find(":")] not in statusBodies:
 					print "Invalid protocol format ... ignored"
-					return None
-		else:
-			if len(args) != 3:
+					return [1], [1]
+				else:
+					print "response protocol: ", args
+					return args, []
+		elif len(args) != 3:
 				print "Invalid protocol length"
-				return None
-	print "response protocol: ", args
-	return args
+				return [1], [1]
+		else:
+			print "response protocol: ", args
+			return args, []
+	if packet.count(JAWMisc.CRNLCRNL) == 2:
+		args = packet.strip().split()
+		print "args: ", args
+		if args[0] != JAWMisc.JAW and args[4] != JAWMisc.JAW:
+			print "Invalid format -> required protocol to begin with JAW/1.0"
+			return [1], [1]
+		try:
+			int(args[1])
+			int(args[5])
+		except ValueError:
+			print "Invalid status number\nExpected: number\nFound: ", args[1], args[5]
+			return [1], [1]
+		if args[2] not in statusCodes and args[6] not in statusCodes:
+			print "Invalid status code\nExpected:OK,ERROR,USERNAME_TAKEN,",
+			print "INVALID_MOVE,GAME_END,USER_QUIT,PLEASE_WAIT\nFound: ", args[2]
+			return [1], [1]
+		if packet.count(JAWMisc.CRNL) == 6:
+			if len(args) != 8:
+				print "Invalid protocol length"
+				return [1], [1]
+			else:
+				if args[3][0:args[3].find(":")] not in statusBodies:
+					print "Invalid protocol format ... ignored"
+					return [1], [1]
+				if args[7][0:args[7].find(":")] not in statusBodies:
+					print "Invalid protocol format ... ignored"
+					return [1], [1]
+				print "response protocol: ", args
+				return args[0:4], args[4:]
+		elif len(args) != 6:
+			print "Invalid protocol length"
+			return [1], [1]
+		else:
+			print "response protocol: ", args
+			return args[0:4], args[4:]
+	return [], []
 
 def checkUsername(username):
 	'''Determine whether the username is valid or not'''
@@ -300,9 +355,7 @@ if __name__ == "__main__":
 
 	try:
 		while True:
-			events = epoll.poll(0.01) # file no and event code
-			if events == "":
-				break
+			events = epoll.poll(0.1) # file no and event code
 			for fileno, event in events:
 				if event & select.EPOLLHUP:
 					# epoll.unregister(fileno)
@@ -318,12 +371,18 @@ if __name__ == "__main__":
 					if len(response) == 0:
 						print "Lost connection to server\n Exiting..."
 						exit(1)
-					args = checkResponseProtocol(response)
+					args1, args2 = checkResponseProtocol(response)
+					print args1
+					print args2
 					# print "ARGS: ",args
-					if args != None and len(args) != 0:
-						action = processResponse(player, args)
+					if len(args1) > 1:
+						action = processResponse(player, args1)
 						if action != None:
 							processStdin(action)
+						if len(args2) > 1:
+							action = processResponse(player, args2)
+							if action != None:
+								processStdin(action)
 					else:
 						player.makeRequest(JAWMethods.RETRANSMIT)
 				elif fileno == stdinfd:
