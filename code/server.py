@@ -61,30 +61,30 @@ class Server(object):
 
 	def removePlayer(self, fileno):
 		'''
-		Removes the player with a user id of username
-		@param usernamed User id of user to remove
+		Removes the specified player
+		@param fileno File descriptor associated with user
 		'''
 		currentPlayer = self.players[fileno]
 		# Player is not in game
 		if currentPlayer['status'] == True:
+			self.sendMessage("JAW/1.0 202 USER_QUIT \r\n QUIT:" + currentPlayer['username'] + "\r\n\r\n", fileno)
 			fNum = fileno
 			epoll.unregister(fileno)
 			self.connections[fNum].close()
 			del self.connections[fNum]
 			del self.players[fNum]
-			self.sendMessage("JAW/1.0 202 USER_QUIT \r\n QUIT:" + currentPlayer['username'] + "\r\n\r\n", fileno)
 		# Player is in game
 		else:
 			currentGame = self.games[currentPlayer['gameId']]
-			otherPlayer = currentGame.player2 if currentPlayer.username != currentGame.player2 else currentPlayer.username
+			otherPlayer = currentGame.player2 if currentPlayer['username'] != currentGame.player2 else currentPlayer['username']
 			del self.games[currentPlayer['gameId']]
-			self.broadcast("JAW/1.0 202 USER_QUIT \r\n QUIT:" + currentPlayer['username'] + "\r\n\r\n", fileno)
+			self.broadcast("JAW/1.0 202 USER_QUIT \r\n QUIT:" + currentPlayer['username'] + "\r\n\r\n", [fileno, self.getSocket(otherPlayer)])
 			self.broadcast("JAW/1.0 201 GAME_END \r\n WINNER:" + otherPlayer + "\r\n\r\n", [fileno, self.getSocket(otherPlayer)])
-			otherPlayer = getPlayer(otherPlayer)
+			otherPlayer = self.getPlayer(otherPlayer)
 			otherPlayer['gameId'] = None
 			fNum = fileno
 			epoll.unregister(fileno)
-			connections[fNum].close()
+			self.connections[fNum].close()
 			del self.connections[fNum]
 			del self.players[fNum]
 		return
@@ -105,7 +105,7 @@ class Server(object):
 		@return game Object of the new game board created
 		'''
 		gameId = uuid.uuid4().hex
-		newBoard = Board(p1, p2, p1)
+		newBoard = board.Board(p1['username'], p2['username'], p1['username'])
 		self.games[gameId] = newBoard
 		p1['gameId'] = gameId
 		p2['gameId'] = gameId
@@ -120,7 +120,7 @@ class Server(object):
 		@param p1 Player1
 		@param p2 Player2
 		'''
-		del games[gameId]
+		del self.games[gameId]
 		p1['gameId'] = None
 		p2['gameId']= None
 		p1['status'] = True
@@ -197,14 +197,17 @@ class Server(object):
 				self.sendMessage("JAW/1.0 400 ERROR \r\n\r\n", fileno)
 			else:
 				currentPlayer = self.players[fileno]
-				currentGame = self.games[currentPlayer.gameId]
+				currentGame = self.games[currentPlayer['gameId']]
+				if currentPlayer['username'] != currentGame.currentPlayer:
+					self.sendMessage("JAW/1.0 405 Invalid_Move \r\n\r\n", fileno)
+					return
 				validMove = currentGame.place(int(requests[2]))
 				if validMove:
 					otherPlayer = currentGame.currentPlayer
-					self.broadcast("JAW/1.0 200 OK \r\n PRINT:" + currentGame + " \r\n\r\n", [fileno, getSocket(otherPlayer)])
+					self.broadcast("JAW/1.0 200 OK \r\n PRINT:" + str(currentGame) + " \r\n\r\n", [fileno, self.getSocket(otherPlayer)])
 					results = currentGame.gameFinished()
 					if results != None:
-						self.broadcast("JAW/1.0 201 GAME_END \r\n WINNER:" + results + " \r\n\r\n", [fileno, getSocket(otherPlayer)])
+						self.broadcast("JAW/1.0 201 GAME_END \r\n WINNER:" + results + " \r\n\r\n", [fileno, self.getSocket(otherPlayer)])
 						self.endGame(currentPlayer.gameId, currentPlayer, otherPlayer)
 				else:
 					self.sendMessage("JAW/1.0 405 Invalid_Move \r\n\r\n", fileno)
@@ -217,9 +220,9 @@ class Server(object):
 				if otherPlayer == None:
 					self.sendMessage("JAW/1.0 403 USER_NOT_FOUND \r\n\r\n", fileno)
 				else:
-					if self.playerAvailable(otherPlayer.username):
-						game = self.createGame(player[fileno], otherPlayer)
-						self.broadcast("JAW/1.0 200 OK \r\n PRINT:" + game + " \r\n\r\n", [fileno, self.getSocket(otherPlayer)])
+					if self.playerAvailable(otherPlayer['username']):
+						game = self.createGame(self.players[fileno], otherPlayer)
+						self.broadcast("JAW/1.0 200 OK \r\n PRINT:" + str(game) + " \r\n\r\n", [fileno, self.getSocket(otherPlayer['username'])])
 					else:
 						self.sendMessage("JAW/1.0 402 USER_BUSY \r\n\r\n", fileno)
 		# EXIT

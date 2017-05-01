@@ -12,14 +12,9 @@ class Board(object):
 		boardString = ""
 		for i in range(0, len(self.board)):
 			if self.board[i] == 0:
-				boardString += " ."
+				boardString += "."
 			else:
-				if self.board[i] == 1:
-					boardString += "X"
-				else:
-					boardString += "O"
-			if i % 3 == 2:
-				boardString += "\n"
+				boardString += "X" if self.board[i] == 1 else "O"
 		return boardString
 
 	def gameFinished(self):
@@ -32,24 +27,24 @@ class Board(object):
 			winner = self.board[3]
 		# third row
 		if self.board[6] != 0 and self.board[6] == self.board[7] and self.board[6] == self.board[8]:
-			winner = self.board[0]
+			winner = self.board[6]
 
 		# first column
 		if self.board[0] != 0 and self.board[0] == self.board[3] and self.board[0] == self.board[6]:
 			winner = self.board[0]
 		# second column
 		if self.board[1] != 0 and self.board[1] == self.board[4] and self.board[1] == self.board[7]:
-			winner = self.board[0]
+			winner = self.board[1]
 		# third column
 		if self.board[2] != 0 and self.board[2] == self.board[5] and self.board[2] == self.board[8]:
-			winner = self.board[0]
+			winner = self.board[2]
 
 		# down diagonal
 		if self.board[0] != 0 and self.board[0] == self.board[4] and self.board[0] == self.board[8]:
 			winner = self.board[0]
 		# up diagonal
 		if self.board[2] != 0 and self.board[2] == self.board[4] and self.board[2] == self.board[6]:
-			winner = self.board[0]
+			winner = self.board[2]
 
 		if winner != 0:
 			print((self.player1 if winner == 1 else self.player2) + " has won")
