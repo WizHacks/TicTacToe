@@ -67,12 +67,12 @@ class Server(object):
 		currentPlayer = self.players[fileno]
 		# Player is not in game
 		if currentPlayer['status'] == True:
+			self.sendMessage("JAW/1.0 202 USER_QUIT \r\n QUIT:" + currentPlayer['username'] + "\r\n\r\n", fileno)
 			fNum = fileno
 			epoll.unregister(fileno)
 			self.connections[fNum].close()
 			del self.connections[fNum]
 			del self.players[fNum]
-			self.sendMessage("JAW/1.0 202 USER_QUIT \r\n QUIT:" + currentPlayer['username'] + "\r\n\r\n", fileno)
 		# Player is in game
 		else:
 			currentGame = self.games[currentPlayer['gameId']]
@@ -105,7 +105,7 @@ class Server(object):
 		@return game Object of the new game board created
 		'''
 		gameId = uuid.uuid4().hex
-		newBoard = Board(p1, p2, p1)
+		newBoard = board.Board(p1['username'], p2['username'], p1['username'])
 		self.games[gameId] = newBoard
 		p1['gameId'] = gameId
 		p2['gameId'] = gameId
@@ -217,9 +217,9 @@ class Server(object):
 				if otherPlayer == None:
 					self.sendMessage("JAW/1.0 403 USER_NOT_FOUND \r\n\r\n", fileno)
 				else:
-					if self.playerAvailable(otherPlayer.username):
-						game = self.createGame(player[fileno], otherPlayer)
-						self.broadcast("JAW/1.0 200 OK \r\n PRINT:" + game + " \r\n\r\n", [fileno, self.getSocket(otherPlayer)])
+					if self.playerAvailable(otherPlayer['username']):
+						game = self.createGame(self.players[fileno], otherPlayer)
+						self.broadcast("JAW/1.0 200 OK \r\n PRINT:" + str(game) + " \r\n\r\n", [fileno, self.getSocket(otherPlayer['username'])])
 					else:
 						self.sendMessage("JAW/1.0 402 USER_BUSY \r\n\r\n", fileno)
 		# EXIT
