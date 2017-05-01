@@ -80,10 +80,6 @@ class Player(object):
 	def makeRequest(self, request, arg=None):
 		if request == JAWMethods.LOGIN:
 			self.login()
-		elif request == JAWMethods.PLAY:
-			self.play(arg)
-		elif request == JAWMethods.WHO:
-			self.who()
 		elif request == JAWMethods.PLACE:
 			self.place(arg)
 		elif request == JAWMethods.EXIT:
@@ -92,13 +88,6 @@ class Player(object):
 			self.retransmit()
 		else:
 			print "No such request!"
-
-	def printBoard(self, board):
-		'''
-		Display the current game board state
-		@param board a list of board indices
-		'''
-		print board
 
 	def sendMessage(self, message):
 		'''
@@ -142,7 +131,6 @@ def processResponse(player, responseList):
 				print "Your turn, please place a move:"
 			else:
 				print "Waiting for opponent ..."
-		# PLAYERS
 
 	# What happens if server sends me 400?
 	if responseList[1] == JAWStatusNum.ERROR_NUM and responseList[2] == JAWResponses.ERROR:
@@ -292,11 +280,6 @@ def help():
 	print "\t\t [ 7, 8, 9]"
 	print "\t\t\t- place your symbol at the corresponding poisition labeled in grid above"
 	print "exit\t\t\t- quits the program at any time"
-	print "games\t\t\t- obtains a list of all ongoing games along with their respective gameID and players"
-	print "who\t\t\t- obtains a list of all players available to play"
-	print "play [player] \t\t- challenges the specified player if s/he is available to play"
-	print "observe [gameID]\t- tunes into the the specified game"
-	print "unobserve [gameID]\t- stops receiving incoming data about particular game"
 
 if __name__ == "__main__":
 	# parse commandline arguments
