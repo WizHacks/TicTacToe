@@ -175,6 +175,8 @@ def processStdin(stdinInput):
 		player.makeRequest(JAWMethods.EXIT)
 	elif args[0] == "who":
 		player.makeRequest(JAWMethods.WHO)
+	elif args[0] == "play":
+		player.makeRequest(JAWMethods.PLAY, arg=args[1])
 	elif args[0] == "place":
 		if len(args) == 2 and len(args[1]) == 1 and args[1][0] > '0' and args[1][0] <= '9':
 			player.makeRequest(JAWMethods.PLACE, args[1][0] - '0')
@@ -218,8 +220,7 @@ def checkResponseProtocol(packet):
 				print "Invalid protocol length"
 				return []
 			else:
-				body = args[3][0:args[3].find(":")]
-				if body not in statusBodies:
+				if args[3][0:args[3].find(":")] not in statusBodies:
 					print "Invalid protocol format ... ignored"
 					return []
 		else:
@@ -308,8 +309,7 @@ if __name__ == "__main__":
 						print "Lost connection to server\n Exiting..."
 						exit(1)
 					args = checkResponseProtocol(response)
-					print "ARGS: ",
-					print args
+					# print "ARGS: ",args
 					if len(args) != 0:
 						action = processResponse(player, args)
 						if action != None:

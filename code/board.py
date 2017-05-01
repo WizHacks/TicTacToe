@@ -12,7 +12,7 @@ class Board(object):
 		boardString = ""
 		for i in range(0, len(self.board)):
 			if self.board[i] == 0:
-				boardString += " ."
+				boardString += "_."
 			else:
 				if self.board[i] == 1:
 					boardString += "X"
