@@ -178,11 +178,8 @@ class Server(object):
 		connection = self.connections[fileno]
 		request = connection.recv(1024)
 		print request#TO DELETE
+		#Check for errors
 		if (len(request) == 0):
-			# fNum = fileno
-			# epoll.unregister(fileno)
-			# server.connections[fNum].close()
-			# del server.connections[fNum]
 			self.removePlayer(fileno)
 			return
 		recurr = request.count('\r\n\r\n')
@@ -191,6 +188,10 @@ class Server(object):
 			self.retransmits[fileno] = ["JAW/1.0 400 ERROR \r\n\r\n"]
 			return
 		requests = request.split()
+		if len(requests) < 2:
+			self.sendMessage("JAW/1.0 400 ERROR \r\n\r\n", fileno)
+			self.retransmits[fileno] = ["JAW/1.0 400 ERROR \r\n\r\n"]
+			return
 		# LOGIN
 		if requests[1] == "LOGIN":
 			print "Number of players: " + str(len(self.connections))
