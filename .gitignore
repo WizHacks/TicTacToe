@@ -1,2 +1,4 @@
 references.txt
 code/*.pyc
+login.py
+.gitignore

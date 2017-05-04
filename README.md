@@ -17,3 +17,6 @@ python player.py 127.0.0.1 2017
 
 ### References/Tutorials
 - [ePoll](http://scotdoyle.com/python-epoll-howto.html)
+
+## Login/Playing instructions	(should cleanup client/server before furthering this)
+ - [Play](https://docs.google.com/a/stonybrook.edu/document/d/1voOAcdXHMq_Y6RCU_X6idHN5l3ql_KYj1AFUXOqSDu0/edit?usp=sharing)
