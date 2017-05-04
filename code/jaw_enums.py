@@ -5,6 +5,7 @@ class JAWMethods(object):
 	EXIT 				= "EXIT"
 	WHO 				= "WHO"
 	RETRANSMIT			= "RETRANSMIT"
+	GAMES				= "GAMES"
 
 class JAWResponses(object):
 	PRINT 				= "PRINT"
@@ -13,6 +14,7 @@ class JAWResponses(object):
 	PLAYERS 			= "PLAYERS"
 	QUIT 				= "QUIT"
 	OTHER_PLAYER		= "OTHER_PLAYER"
+	GAMES				= "GAMES"
 
 class JAWStatuses(object):
 	OK 					= "OK"

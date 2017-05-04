@@ -144,6 +144,16 @@ class Server(object):
 		p2['status'] = True
 		return
 
+	def getGames(self):
+		'''
+		Get all current games with players in server
+		@return String representation of all games. gameID-player1,player2;gameId-player1,player2;...
+		'''
+		output = ""
+		for key, value in self.players.iteritems():
+			output += key + "-" + value.player1 + "," + value.player2 + ";"
+		return output[:(len(output)-1)]
+
 	def sendMessage(self, message, fileno):
 		'''
 		Sends a message to the client
@@ -312,6 +322,16 @@ class Server(object):
 				print info
 				self.retransmits[fileno] = [info]
 				self.sendMessage(info, fileno)
+		# GAMES
+		elif requests[1] == "GAMES"
+			if len(requests) < 2:
+				# Invalid command usage
+				self.sendMessage("JAW/1.0 400 ERROR \r\n\r\n", fileno)
+			else:
+				# Gets list of all current Games
+				games = self.getGames()
+				self.sendMessage("JAW/1.0 200 OK \r\n GAMES:" + games + " \r\n\r\n", fileno)
+				self.retransmits[fileno] = ["JAW/1.0 200 OK \r\n GAMES:" + games + " \r\n\r\n"]	
 		# RETRANSMIT
 		elif requests[1] == "RETRANSMIT":
 			if len(requests) < 2:
