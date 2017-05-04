@@ -1,6 +1,5 @@
 from socket import *
 import select, uuid, board, json, time
-#import player
 
 serverSocket = socket(AF_INET, SOCK_STREAM)
 serverSocket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
@@ -14,10 +13,10 @@ epoll.register(serverSocket.fileno(), select.EPOLLIN)
 
 class Server(object):
 	def __init__(self):
-		self.players = {}
-		self.games = {}
-		self.connections = {}
-		self.retransmits = {}
+		self.players = {} # Dictionary with key as connection's file descriptor and value as JSON format of Player class
+		self.games = {} # Dictionary with key as game's Id and value as the Board class
+		self.connections = {} # Dictionary with key as connection's file descriptor and value as actual connection. Used for ePoll connections
+		self.retransmits = {} # Dictionary with key as connection's file descriptor and value as data that was last sent by server. Only contains most recent data sent by server.
 
 	'''main methods'''
 	def addConnection(self, connection):
@@ -66,32 +65,32 @@ class Server(object):
 		@param fileno File descriptor associated with user
 		'''
 		try:
+			# check if user logged in after establishing a connection
 			currentPlayer = self.players[fileno]
 		except Exception:
+			# if user did not log in after establishing connection, just remove connection information
 			fNum = fileno
 			epoll.unregister(fileno)
 			self.connections[fNum].close()
 			del self.connections[fNum]
 			return
-		# Player is not in game
 		if currentPlayer['status'] == True:
+			# Player is not in game
 			self.sendMessage("JAW/1.0 202 USER_QUIT \r\n QUIT:" + currentPlayer['username'] + " \r\n\r\n", fileno)
 			fNum = fileno
+
+			# Remove player and its corresponding ePoll connection
 			epoll.unregister(fileno)
 			self.connections[fNum].close()
 			del self.connections[fNum]
-			try:
-				del self.players[fNum]
-			except Exception:
-				print "Username was taken. No big deal."
-		# Player is in game
+			del self.players[fNum]
 		else:
-			if currentPlayer['gameId'] == None:
-				epoll.modify(fileno, select.EPOLLIN | select.EPOLLET)
-				return
+			# Player is in game
 			currentGame = self.games[currentPlayer['gameId']]
 			otherPlayer = currentGame.player2 if currentPlayer['username'] != currentGame.player2 else currentGame.player1
 			del self.games[currentPlayer['gameId']]
+
+			# Notify both players who quitted and who won. End the game
 			self.retransmits[self.getSocket(otherPlayer)] = ["JAW/1.0 202 USER_QUIT \r\n QUIT:" + currentPlayer['username'] + " \r\n\r\n", "JAW/1.0 201 GAME_END \r\n WINNER:" + otherPlayer + " \r\n\r\n"]
 			self.broadcast("JAW/1.0 202 USER_QUIT \r\n QUIT:" + currentPlayer['username'] + " \r\n\r\n", [fileno, self.getSocket(otherPlayer)])
 			self.broadcast("JAW/1.0 201 GAME_END \r\n WINNER:" + otherPlayer + " \r\n\r\n", [fileno, self.getSocket(otherPlayer)])
@@ -99,6 +98,8 @@ class Server(object):
 			otherPlayer['gameId'] = None
 			otherPlayer['status'] = True
 			fNum = fileno
+			
+			# Remove quitting player and its corresponding ePoll connection
 			epoll.unregister(fileno)
 			self.connections[fNum].close()
 			del self.connections[fNum]
@@ -151,12 +152,12 @@ class Server(object):
 		'''
 		Sends a message to the client
 		@param message Message to send
-		@param connection Sockwt connection to send message to
+		@param fileno File descriptor of ePoll connection to send message to
 		'''
 		epoll.modify(fileno, select.EPOLLOUT)
 		self.connections[fileno].send(message)
 		epoll.modify(fileno, select.EPOLLIN | select.EPOLLET)
-		print "Sent: " + message #TO DELETE
+		print "Sent: " + message # Log server action
 		return
 
 
@@ -164,7 +165,7 @@ class Server(object):
 		'''
 		Broadcasts message to everyone
 		@param message Message to send
-		@param connections Socket connections to send message to
+		@param connections File descriptors of socket connections to send message to
 		'''
 		for c in connections:
 			self.sendMessage(message, c)
@@ -175,10 +176,12 @@ class Server(object):
 		Checks the request protocol
 		@param fileno Incoming socket connection file descriptor
 		'''
+		# Receive incoming data
 		connection = self.connections[fileno]
 		request = connection.recv(1024).decode()
-		print request#TO DELETE
-		#Check for errors
+		print request # Log server action
+
+		# Check for invalid protocol
 		if (len(request) == 0):
 			self.removePlayer(fileno)
 			return
@@ -192,9 +195,10 @@ class Server(object):
 			self.sendMessage("JAW/1.0 400 ERROR \r\n\r\n", fileno)
 			self.retransmits[fileno] = ["JAW/1.0 400 ERROR \r\n\r\n"]
 			return
+
 		# LOGIN
 		if requests[1] == "LOGIN":
-			print "Number of players: " + str(len(self.connections))
+			# Invalid command usage
 			if len(requests) < 3 or len(self.connections) > 2:
 				self.sendMessage("JAW/1.0 400 ERROR \r\n\r\n", fileno)
 				fNum = fileno
@@ -202,10 +206,12 @@ class Server(object):
 				self.connections[fNum].close()
 				del self.connections[fNum]
 			else:
+				# Extract player data
 				newPlayer = request[request.find(" ")+6 : len(request)]
 				try:
 					player = json.loads(newPlayer)
 				except Exception:
+					# Invalid player data
 					self.sendMessage("JAW/1.0 400 ERROR \r\n\r\n", fileno)
 					fNum = fileno
 					epoll.unregister(fileno)
@@ -213,13 +219,13 @@ class Server(object):
 					del self.connections[fNum]
 					return
 				if self.playerExists(player['username']):
+					# Check if username (the user id) is taken
 					self.sendMessage("JAW/1.0 401 USERNAME_TAKEN \r\n\r\n", fileno)
 					self.retransmits[fileno] = ["JAW/1.0 401 USERNAME_TAKEN \r\n\r\n"]
 				else:
 					self.addPlayer(connection, player)
-					#self.sendMessage("JAW/1.0 200 OK \r\n\r\n", fileno)
-					#self.retransmits[fileno] = ["JAW/1.0 200 OK \r\n\r\n"]
 					if len(self.connections) == 2:
+						# If 2 players are on, autoplay begins
 						otherPlayer = None
 						for key, value in self.players.iteritems():
 							if player['username'] != value['username']:
@@ -235,21 +241,25 @@ class Server(object):
 						self.broadcast("JAW/1.0 200 OK \r\n PRINT:" + str(game) + " \r\n\r\n", [fileno, self.getSocket(otherPlayer['username'])])
 						self.broadcast("JAW/1.0 200 OK \r\n PLAYER:" + game.currentPlayer + " \r\n\r\n", [fileno, self.getSocket(otherPlayer['username'])])
 					else:
+						# Player has to wait for another player
 						self.sendMessage("JAW/1.0 406 PLEASE_WAIT \r\n\r\n", fileno)
 						self.retransmits[fileno] = ["JAW/1.0 406 PLEASE_WAIT \r\n\r\n"]
 		# PLACE
 		elif requests[1] == "PLACE":
 			if len(requests) < 3:
+				# Invalid command usage
 				self.sendMessage("JAW/1.0 400 ERROR \r\n\r\n", fileno)
 				self.retransmits[fileno] = ["JAW/1.0 400 ERROR \r\n\r\n"]
 			else:
 				currentPlayer = self.players[fileno]
 				if currentPlayer['gameId'] == 0 or currentPlayer['gameId'] == None:
+					# Checks if player is in a game
 					self.sendMessage("JAW/1.0 405 INVALID_MOVE \r\n\r\n", fileno)
 					self.retransmits[fileno] = ["JAW/1.0 405 INVALID_MOVE \r\n\r\n"]
 					return
 				currentGame = self.games[currentPlayer['gameId']]
 				if currentPlayer['username'] != currentGame.currentPlayer:
+					# Check if it is the player's turn
 					self.sendMessage("JAW/1.0 405 INVALID_MOVE \r\n\r\n", fileno)
 					self.retransmits[fileno] = ["JAW/1.0 405 INVALID_MOVE \r\n\r\n"]
 					return
@@ -263,11 +273,13 @@ class Server(object):
 					self.broadcast("JAW/1.0 200 OK \r\n PRINT:" + str(currentGame) + " \r\n\r\n", [fileno, self.getSocket(otherPlayer)])
 					results = currentGame.gameFinished()
 					if results != None:
+						# Game finished
 						self.retransmits[fileno] .append("JAW/1.0 201 GAME_END \r\n WINNER:" + results + " \r\n\r\n")
 						self.retransmits[self.getSocket(otherPlayer)].append("JAW/1.0 201 GAME_END \r\n WINNER:" + results + " \r\n\r\n")
 						self.broadcast("JAW/1.0 201 GAME_END \r\n WINNER:" + results + " \r\n\r\n", [fileno, self.getSocket(otherPlayer)])
 						self.endGame(currentPlayer['gameId'], currentPlayer, self.players[self.getSocket(otherPlayer)])
-						time.sleep(3)
+						time.sleep(3) # Temporarily pause server to allow client sufficient time to receive data correctly. ePoll sends data too fast.
+
 						#Automatically start a new game
 						otherPlayer = self.getPlayer(otherPlayer)
 						game = self.createGame(otherPlayer, currentPlayer)
@@ -280,6 +292,7 @@ class Server(object):
 						self.broadcast("JAW/1.0 200 OK \r\n PRINT:" + str(game) + " \r\n\r\n", [fileno, self.getSocket(otherPlayer['username'])])
 						self.broadcast("JAW/1.0 200 OK \r\n PLAYER:" + game.currentPlayer + " \r\n\r\n", [fileno, self.getSocket(otherPlayer['username'])])
 					else:
+						# Game not finished
 						self.broadcast("JAW/1.0 200 OK \r\n PLAYER:" + currentGame.currentPlayer + " \r\n\r\n", [fileno, self.getSocket(otherPlayer)])
 						self.retransmits[fileno] .append("JAW/1.0 200 OK \r\n PLAYER:" + currentGame.currentPlayer + " \r\n\r\n")
 						self.retransmits[self.getSocket(otherPlayer)] .append("JAW/1.0 200 OK \r\n PLAYER:" + currentGame.currentPlayer + " \r\n\r\n")
@@ -295,9 +308,15 @@ class Server(object):
 				self.removePlayer(fileno)
 		# RETRANSMIT
 		elif requests[1] == "RETRANSMIT":
-			for v in self.retransmits[fileno]:
-				self.sendMessage(v, fileno)
+			if len(requests) < 2:
+				# Invalid command usage
+				self.sendMessage("JAW/1.0 400 ERROR \r\n\r\n", fileno)
+			else:
+				# Retransmit last set of consecutive messages sent by the server when performing one action
+				for v in self.retransmits[fileno]:
+					self.sendMessage(v, fileno)
 		else:
+			# Invalid command specified
 			self.sendMessage("JAW/1.0 400 ERROR \r\n\r\n", fileno)
 			self.retransmits[fileno] = ["JAW/1.0 400 ERROR \r\n\r\n"]
 		return
@@ -338,14 +357,11 @@ if __name__ == '__main__':
 					epoll.register(connectionSocket.fileno(), select.EPOLLIN | select.EPOLLET)
 					server.addConnection(connectionSocket)
 				elif event & select.EPOLLIN:
-					#receive client data on epoll connection
-					print "Receiving data from fileno: " + str(fileno)
+					# ePoll connection has incoming data to read
+					print "Receiving data from fileno: " + str(fileno) # Log server action
 					server.checkRequestProtocol(fileno)
 				elif event & (select.EPOLLERR | select.EPOLLHUP):
-					# fNum = fileno
-					# epoll.unregister(fileno)
-					# server.connections[fNum].close()
-					# del server.connections[fNum]
+					# ePoll connection has an error
 					server.removePlayer(fileno)
 	finally:
 		epoll.unregister(serverSocket.fileno())
