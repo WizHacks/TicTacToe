@@ -339,11 +339,12 @@ if __name__ == '__main__':
 					#receive client data on epoll connection
 					print "Receiving data from fileno: " + str(fileno)
 					server.checkRequestProtocol(fileno)
-				elif event & select.EPOLLHUP:
-					fNum = fileno
-					epoll.unregister(fileno)
-					server.connections[fNum].close()
-					del server.connections[fNum]
+				elif event & (select.EPOLLERR | select.EPOLLHUP):
+					# fNum = fileno
+					# epoll.unregister(fileno)
+					# server.connections[fNum].close()
+					# del server.connections[fNum]
+					server.removePlayer(fileno)
 	finally:
 		epoll.unregister(serverSocket.fileno())
 		epoll.close()
