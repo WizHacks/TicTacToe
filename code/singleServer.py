@@ -176,7 +176,7 @@ class Server(object):
 		@param fileno Incoming socket connection file descriptor
 		'''
 		connection = self.connections[fileno]
-		request = connection.recv(1024)
+		request = connection.recv(1024).decode()
 		print request#TO DELETE
 		#Check for errors
 		if (len(request) == 0):
