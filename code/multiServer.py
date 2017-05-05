@@ -1,6 +1,7 @@
 from socket import *
 import select, uuid, board, json
 
+global debug
 serverSocket = socket(AF_INET, SOCK_STREAM)
 serverSocket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
 serverPort = 9347
@@ -163,7 +164,8 @@ class Server(object):
 		epoll.modify(fileno, select.EPOLLOUT)
 		self.connections[fileno].send(message)
 		epoll.modify(fileno, select.EPOLLIN | select.EPOLLET)
-		print "Sent: " + message # Log server action
+		if debug:
+			print "Sent: " + message # Log server action
 		return
 
 
@@ -185,7 +187,8 @@ class Server(object):
 		# Receive incoming data
 		connection = self.connections[fileno]
 		request = connection.recv(1024).decode()
-		print request # Log server action
+		if debug:
+			print request # Log server action
 
 		# Check for invalid protocol
 		if (len(request) == 0):
@@ -372,6 +375,7 @@ class Server(object):
 server = Server()
 
 if __name__ == '__main__':
+	debug = False
 	try:
 		while True:
 			events = epoll.poll(0.01)
@@ -384,7 +388,8 @@ if __name__ == '__main__':
 					server.addConnection(connectionSocket)
 				elif event & select.EPOLLIN:
 					# ePoll connection has incoming data to read
-					print "Receiving data from fileno: " + str(fileno) # Log server action
+					if debug:
+						print "Receiving data from fileno: " + str(fileno) # Log server action
 					server.checkRequestProtocol(fileno)
 				elif event & (select.EPOLLERR | select.EPOLLHUP):
 					# ePoll connection has an error

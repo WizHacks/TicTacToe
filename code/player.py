@@ -197,6 +197,8 @@ def processStdin(stdinInput):
 	args[0] = args[0].lower()
 	if args[0] == "help":
 		help()
+	if args[0] == "whoami":
+		print player.username
 	elif args[0] == "login" or not player.isLoggedIn:
 		if player.isLoggedIn:
 			print "You have already logged in"

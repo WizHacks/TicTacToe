@@ -6,6 +6,7 @@ import socket, select
 import sys, os, fcntl
 
 global player
+global debug
 
 
 class Player(object):
@@ -68,7 +69,7 @@ class Player(object):
 			self.exit()
 		elif request == JAWMethods.RETRANSMIT:
 			self.retransmit()
-			print "---------------------------------------------------------"
+			# print "---------------------------------------------------------"
 		else:
 			print "No such request!"
 
@@ -78,7 +79,8 @@ class Player(object):
 		@param message the message to send to server
 		'''
 		clientSocket.send(message)
-		print "SENT: " + message
+		if debug:
+			print "SENT: " + message
 
 	def createPlayerDictionary(self):
 		playerDictionary = {}
@@ -96,19 +98,22 @@ def processResponse(player, responseList):
 	@param response response received from the server
 	'''
 	if responseList[1] == JAWStatusNum.OK_NUM and responseList[2] == JAWStatuses.OK:
-		print "Last request: " + player.lastRequestSent
+		if debug:
+			print "Last request: " + player.lastRequestSent
 		# # LOGIN
 		# if len(responseList) == 3 and player.lastRequestSent == JAWMethods.LOGIN:
 		# 	player.isLoggedIn = True
 		# 	print "Logged in successfully at time: ", time.strftime("%b %d %Y %H:%M:%S", time.gmtime(player.timeLoggedIn))
 
 		# # OTHER PLAYER
-		# el
+		if len(responseList) != 4:
+			print "You have connected a multiPlayer server, please play on a singleServer\n SYSTEM DOWN"
+			exit(1)
 		if (player.lastRequestSent == JAWMethods.LOGIN or player.lastRequestSent == JAWMethods.PLACE) and responseList[3][:responseList[3].find(":")] == JAWResponses.OTHER_PLAYER:
 			opponent = responseList[3][responseList[3].find(":")+1:]
 			player.isLoggedIn = True
 			print "Logged in successfully at time: ", time.strftime("%b %d %Y %H:%M:%S", time.gmtime(player.timeLoggedIn))
-			print "Your opponent is: " + opponent
+			print "\nYour opponent is: " + opponent
 			player.opponent = opponent
 			player.status = False
 
@@ -123,10 +128,10 @@ def processResponse(player, responseList):
 			playerTurn = responseList[3][responseList[3].find(":")+1:]
 
 			if player.username == playerTurn:
-				print "Your turn, please place a move:"
+				print "It is your turn, please place a move:"
 			else:
-				print "Waiting for opponent move..."
-			
+				print "Waiting for opponent's move..."
+
 
 	# What happens if server sends me 400?
 	if responseList[1] == JAWStatusNum.ERROR_NUM and responseList[2] == JAWStatuses.ERROR:
@@ -135,10 +140,10 @@ def processResponse(player, responseList):
 		exit(1)
 
 	if responseList[1] == JAWStatusNum.PLEASE_WAIT_NUM and responseList[2] == JAWStatuses.PLEASE_WAIT:
-		print "Please wait ... searching for opponents"
+		print "Please wait ... searching for opponent"
 
 	if responseList[1] == JAWStatusNum.USERNAME_TAKEN_NUM and responseList[2] == JAWStatuses.USERNAME_TAKEN and player.lastRequestSent == JAWMethods.LOGIN:
-		print "Username as been taken, please enter another name:"
+		print "Username has been taken, please enter another name:"
 		return JAWMethods.LOGIN.lower()
 
 	if responseList[1] == JAWStatusNum.INVALID_MOVE_NUM and responseList[2] == JAWStatuses.INVALID_MOVE and player.lastRequestSent == JAWMethods.PLACE:
@@ -148,13 +153,13 @@ def processResponse(player, responseList):
 	if responseList[1] == JAWStatusNum.GAME_END_NUM and responseList[2] == JAWStatuses.GAME_END and responseList[3][:responseList[3].find(":")] == JAWResponses.WINNER:
 		if responseList[3][responseList[3].find(":") + 1:] == player.username:
 			print "Congratulations, you won!"
-			print "Please wait ... searching for opponents"
+			print "Please wait ... searching for opponent"
 		elif responseList[3][responseList[3].find(":") + 1:] == "None":
 			print "Game is a draw!"
-			print "Please wait ... searching for opponents"
+			print "Please wait ... searching for opponent"
 		else:
 			print "You lost, better luck next time!"
-			print "Please wait ... searching for opponents"
+			print "Please wait ... searching for opponent"
 		player.status = True
 		return None	# this means someone won
 
@@ -215,11 +220,13 @@ def checkResponseProtocol(packet):
 				JAWResponses.QUIT, JAWResponses.OTHER_PLAYER]
 
 	args = []
-	print packet
-	print packet.count(JAWMisc.CRNLCRNL)
+	if debug:
+		print packet
+		print packet.count(JAWMisc.CRNLCRNL)
 	if packet.count(JAWMisc.CRNLCRNL) == 1:
 		args = packet.strip().split()
-		print "args: ", args
+		if debug:
+			print "args: ", args
 		if args[0] != JAWMisc.JAW:
 			print "Invalid format -> required protocol to begin with JAW/1.0"
 			return [1], [1]
@@ -242,17 +249,20 @@ def checkResponseProtocol(packet):
 					print "Invalid protocol format ... ignored"
 					return [1], [1]
 				else:
-					print "response protocol: ", args
+					if debug:
+						print "response protocol: ", args
 					return args, []
 		elif len(args) != 3:
 				print "Invalid protocol length"
 				return [1], [1]
 		else:
-			print "response protocol: ", args
+			if debug:
+				print "response protocol: ", args
 			return args, []
 	if packet.count(JAWMisc.CRNLCRNL) == 2:
 		args = packet.strip().split()
-		print "args: ", args
+		if debug:
+			print "args: ", args
 		if args[0] != JAWMisc.JAW and args[4] != JAWMisc.JAW:
 			print "Invalid format -> required protocol to begin with JAW/1.0"
 			return [1], [1]
@@ -277,13 +287,15 @@ def checkResponseProtocol(packet):
 				if args[7][0:args[7].find(":")] not in statusBodies:
 					print "Invalid protocol format ... ignored"
 					return [1], [1]
-				print "response protocol: ", args
+				if debug:
+					print "response protocol: ", args
 				return args[0:4], args[4:]
 		elif len(args) != 6:
 			print "Invalid protocol length"
 			return [1], [1]
 		else:
-			print "response protocol: ", args
+			if debug:
+				print "response protocol: ", args
 			return args[0:4], args[4:]
 	return [], []
 
@@ -296,18 +308,12 @@ def help():
 	Prints the help menu
 	'''
 	print "login [username] \t- logs into a server with unique id.  Force quits if username is already taken"
-	print "place [index]\t [ 1, 2, 3]"
-	print "\t\t [ 4, 5, 6]"
-	print "\t\t [ 7, 8, 9]"
+	print "place [index]\t [ 1, 2, 3]\n\t\t [ 4, 5, 6]\n\t\t [ 7, 8, 9]"
 	print "\t\t\t- place your symbol at the corresponding poisition labeled in grid above"
 	print "exit\t\t\t- quits the program at any time"
-	print "games\t\t\t- obtains a list of all ongoing games along with their respective gameID and players"
-	print "who\t\t\t- obtains a list of all players available to play"
-	print "play [player] \t\t- challenges the specified player if s/he is available to play"
-	print "observe [gameID]\t- tunes into the the specified game"
-	print "unobserve [gameID]\t- stops receiving incoming data about particular game"
 
 if __name__ == "__main__":
+	debug = False
 	# parse commandline arguments
 	usage = "%(prog)s serverName serverPort"
 	ap = ArgumentParser(usage = usage)
@@ -366,9 +372,9 @@ if __name__ == "__main__":
 						print "Lost connection to server\n Exiting..."
 						exit(1)
 					args1, args2 = checkResponseProtocol(response)
-					print args1
-					print args2
-					# print "ARGS: ",args
+					if debug:
+						print args1
+						print args2
 					if len(args1) > 1:
 						action = processResponse(player, args1)
 						if action != None:
