@@ -1,5 +1,5 @@
 from socket import *
-import select, uuid, board, json, time
+import select, uuid, board, json, time, datetime
 
 global debug
 serverSocket = socket(AF_INET, SOCK_STREAM)
@@ -122,7 +122,7 @@ class Server(object):
 		@param p2 Player 2
 		@return game Object of the new game board created
 		'''
-		gameId = uuid.uuid4().hex
+		gameId = uuid.uuid4().int
 		newBoard = None
 		if p1['timeLoggedIn'] < p2['timeLoggedIn']:
 			newBoard = board.Board(p1['username'], p2['username'], p1['username'])
@@ -159,7 +159,7 @@ class Server(object):
 		self.connections[fileno].send(message)
 		epoll.modify(fileno, select.EPOLLIN | select.EPOLLET)
 		if debug:
-			print "Sent: " + message # Log server action
+			print datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S') + "\tSent to connection " + str(fileno) + ": " + message # Log server action
 		return
 
 
@@ -182,7 +182,7 @@ class Server(object):
 		connection = self.connections[fileno]
 		request = connection.recv(1024).decode()
 		if debug:
-			print request # Log server action
+			print datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S') + "\tReceived request from connection " + str(fileno) + ": " + request # Log server action
 
 		# Check for invalid protocol
 		if (len(request) == 0):
@@ -350,7 +350,7 @@ class Server(object):
 server = Server()
 
 if __name__ == '__main__':
-	debug = False
+	debug = True
 	try:
 		while True:
 			events = epoll.poll(1)
@@ -363,8 +363,8 @@ if __name__ == '__main__':
 					server.addConnection(connectionSocket)
 				elif event & select.EPOLLIN:
 					# ePoll connection has incoming data to read
-					if debug:
-						print "Receiving data from fileno: " + str(fileno) # Log server action
+					# if debug:
+					# 	print "Receiving data from fileno: " + str(fileno) # Log server action
 					server.checkRequestProtocol(fileno)
 				elif event & (select.EPOLLERR | select.EPOLLHUP):
 					# ePoll connection has an error
