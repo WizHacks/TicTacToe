@@ -186,14 +186,14 @@ def processStdin(stdinInput):
 	@param stdinInput input received from stdin
 	'''
 	global player
-	args = stdinInput.split(" ")
+	args = stdinInput.split(" ")	
 	args[0] = args[0].lower()
 	if args[0] == "help":
 		help()	
 	elif args[0] == "exit":
 		player.makeRequest(JAWMethods.EXIT)
 		return True
-	elif args[0] == "place":
+	elif args[0] == "place" and player.isLoggedIn:
 		if not player.status:
 			if len(args) == 2 and len(args[1]) == 1 and args[1][0] > '0' and args[1][0] <= '9':
 				player.makeRequest(JAWMethods.PLACE, args[1][0])
@@ -202,6 +202,8 @@ def processStdin(stdinInput):
 				print "\t\t\t [ 4, 5, 6]"
 				print "\t\t\t [ 7, 8, 9]"
 				print "\t\t\t\t- place your symbol at the corresponding poisition labeled in grid above"
+		else:
+			print "Please start a game first!"
 	# elif args[0] == "observe":
 	# 	print "if len(args) == 2"
 	elif args[0] == "login" and not player.isLoggedIn:
@@ -210,9 +212,15 @@ def processStdin(stdinInput):
 				player.username = args[1]
 				player.makeRequest(JAWMethods.LOGIN)
 			else:
-				print "Username must be alphanumeric and not contain any spaces!"
+				print "Username must be alphanumeric and not contain any spaces!"				
 	else:
-		print "invalid command "
+		if player.isLoggedIn:
+			if args[0] == "login":
+				print 'Already logged in as %s!' %(player.username)
+			else:
+				print "Invalid command: ", args[0]
+		else:
+			print "Please login first!"
 	return False
 
 def checkResponseProtocol(packet):
@@ -400,6 +408,7 @@ if __name__ == "__main__":
 	except socket.error:
 		print "Error connecting to server. Exiting ..."
 	finally:
+		# cleanup
 		epoll.unregister(clientSocket.fileno())
 		epoll.unregister(stdinfd)
 		epoll.close()
