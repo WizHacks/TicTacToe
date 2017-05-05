@@ -322,7 +322,7 @@ def help():
 	'''
 	Prints the help menu
 	'''
-	print "login [username] \t- logs into a server with unique id.  Force quits if username is already taken"
+	print "login [username] \t- logs into a server with unique id."
 	print "place [index]\t [ 1, 2, 3]\n\t\t [ 4, 5, 6]\n\t\t [ 7, 8, 9]"
 	print "\t\t\t- place your symbol at the corresponding poisition labeled in grid above"
 	print "exit\t\t\t- quits the program at any time"
