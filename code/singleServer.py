@@ -363,8 +363,6 @@ if __name__ == '__main__':
 					server.addConnection(connectionSocket)
 				elif event & select.EPOLLIN:
 					# ePoll connection has incoming data to read
-					# if debug:
-					# 	print "Receiving data from fileno: " + str(fileno) # Log server action
 					server.checkRequestProtocol(fileno)
 				elif event & (select.EPOLLERR | select.EPOLLHUP):
 					# ePoll connection has an error
