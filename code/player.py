@@ -162,7 +162,7 @@ def processResponse(player, responseList):
 				print "Your turn, please place a move: (hint: place [1-9])"
 			else:
 				if player.opponent == None:
-					player.opponent = playerTurn					
+					player.opponent = playerTurn
 
 				print "Waiting for %s's move..." %(player.opponent)
 		# PLAYERS
@@ -275,16 +275,6 @@ def processStdin(stdinInput):
 				player.makeRequest(JAWMethods.LOGIN)
 			else:
 				print "Username must be alphanumeric and not contain any spaces!"
-				# while True:
-				# 	try:
-				# 		username = raw_input("")
-				# 		if checkUsername(username):
-				# 			break
-				# 		print "Username must be alphanumeric and not contain any spaces!"
-				# 	except EOFError:
-				# 		continue
-				# 	player.username = username
-				# 	player.makeRequest(JAWMethods.LOGIN)
 	else:
 		if player.isLoggedIn:
 			if args[0] == "login":
@@ -378,10 +368,6 @@ if __name__ == "__main__":
 	epoll = select.epoll()
 	print "Welcome to TicTacToc!"
 	sys.stdout.flush()
-	# username = raw_input("")
-	# if not checkUsername(username):
-	# 	print "Username must not contain any spaces!"
-	# 	exit(1)
 
 	try:
 		clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
