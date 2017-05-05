@@ -22,7 +22,7 @@ class Player(object):
 		self.timeLoggedIn = timeLoggedIn if timeLoggedIn != None else None
 
 	def __str__(self):
-		return 'username: '+ self.username + '\nstatus: ' + str(self.status) + '\ngameId: ' + str(self.gameId) + '\ntimeLoggedIn: ' + self.timeLoggedIn
+		return 'username: '+ self.username + '\nstatus: ' + str(self.status) + '\ngameId: ' + str(self.gameId) + '\ntimeLoggedIn: ' + str(self.timeLoggedIn)
 
 	'''main methods'''
 	def login(self):
@@ -143,12 +143,14 @@ def processResponse(player, responseList):
 		# LOGIN
 		if len(responseList) == 3 and player.lastRequestSent == JAWMethods.LOGIN:
 			player.isLoggedIn = True
-			print "Hello World, ", player.username + "!"
+			print "Hello World,", player.username + "!"
 			print "Logged in successfully at time: ", time.strftime("%b %d %Y %H:%M:%S", time.gmtime(player.timeLoggedIn))
 		# PRINT
 		elif (player.lastRequestSent == JAWMethods.PLACE or player.lastRequestSent == JAWMethods.LOGIN or player.lastRequestSent == JAWMethods.PLAY) and responseList[3][:responseList[3].find(":")] == JAWResponses.PRINT:
 			board = responseList[3][responseList[3].find(":")+1:]
 			if board == ".........":
+				#print player.opponent
+				#print player
 				print "A game has started ~"
 			print board[:3] + "\n" + board[3:6] + "\n" + board[6:]
 			player.status = False
@@ -156,7 +158,7 @@ def processResponse(player, responseList):
 		elif (player.lastRequestSent == JAWMethods.PLACE or player.lastRequestSent == JAWMethods.LOGIN or player.lastRequestSent == JAWMethods.PLAY) and responseList[3][:responseList[3].find(":")] == JAWResponses.PLAYER:
 			playerTurn = responseList[3][responseList[3].find(":")+1:]
 			if player.username == playerTurn:
-				print "Your turn, please place a move: (hint: place [0-9])"
+				print "Your turn, please place a move: (hint: place [1-9])"
 			else:
 				print "Waiting for opponent move..."
 		# PLAYERS
@@ -165,7 +167,7 @@ def processResponse(player, responseList):
 			if playersList[0] == "":
 				print "No available users online!"
 			else:
-				print "Users online:"
+				print "Available users online:"
 				for player in playersList:
 					print player
 		# GAMES
@@ -357,7 +359,7 @@ def help():
 
 if __name__ == "__main__":
 	global debug
-	debug = True 				# False-turn off debugging		True- Turn on debugging
+	debug = False 				# False-turn off debugging		True- Turn on debugging
 	# parse commandline arguments
 	usage = "%(prog)s serverName serverPort"
 	ap = ArgumentParser(usage = usage)
