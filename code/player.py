@@ -133,6 +133,7 @@ def processResponse(player, responseList):
 		# LOGIN
 		if len(responseList) == 3 and player.lastRequestSent == JAWMethods.LOGIN:
 			player.isLoggedIn = True
+			print "Hello World, ", player.username + "!"
 			print "Logged in successfully at time: ", time.strftime("%b %d %Y %H:%M:%S", time.gmtime(player.timeLoggedIn))
 		# PRINT
 		elif (player.lastRequestSent == JAWMethods.PLACE or player.lastRequestSent == JAWMethods.LOGIN or player.lastRequestSent == JAWMethods.PLAY) and responseList[3][:responseList[3].find(":")] == JAWResponses.PRINT:
@@ -158,9 +159,9 @@ def processResponse(player, responseList):
 				for player in playersList:
 					print player
 		# GAMES
+
 		elif player.lastRequestSent == JAWMethods.GAMES and responseList[3][:responseList[3].find(":")] == JAWResponses.GAMES:
 			gamesList = responseList[3][responseList[3].find(":")+1:].split(";")
-			print gamesList
 			if gamesList[0] == "":
 				print "No games in progress!"
 			else:
@@ -170,7 +171,6 @@ def processResponse(player, responseList):
 					print playerStart
 					gameid = game[:playerStart]
 					playersList = game[playerStart+1:].split(',')
-					print playersList
 					games += "Game ID: " + gameid + "\nPlayers: " + playersList[0] + ", "+ playersList[1] + "\n"
 				print "Games in progress:\n%s" %(games)
 
@@ -219,35 +219,37 @@ def processStdin(stdinInput):
 	'''
 	global player
 	args = stdinInput.split(" ")
-	print "STDIN ", args
+	# print "STDIN ", args
 	args[0] = args[0].lower()
 	if args[0] == "help":
 		help()
-	elif args[0] == "whoami":
+	# elif args[0] == "whoami":
+	# 	print player.username
+	# elif args[0] == "login" or not player.isLoggedIn:
+	# 	if player.isLoggedIn:
+	# 		print "You have already logged in"
+	# 	elif len(args) == 2:
+	# 		if checkUsername(args[1]):
+	# 			player.username = args[1]
+	# 			player.makeRequest(JAWMethods.LOGIN)
+	# 		else:
+	# 			while True:
+	# 				try:
+	# 					username = raw_input("")
+	# 					if checkUsername(username):
+	# 						break
+	# 					print "Invalid Username"
+	# 				except EOFError:
+	# 					continue
+	# 				player.username = username
+	# 				player.makeRequest(JAWMethods.LOGIN)
+	elif args[0] == "whoami" and player.isLoggedIn:
 		print player.username
-	elif args[0] == "login" or not player.isLoggedIn:
-		if player.isLoggedIn:
-			print "You have already logged in"
-		elif len(args) == 2:
-			if checkUsername(args[1]):
-				player.username = args[1]
-				player.makeRequest(JAWMethods.LOGIN)
-			else:
-				while True:
-					try:
-						username = raw_input("")
-						if checkUsername(username):
-							break
-						print "Invalid Username"
-					except EOFError:
-						continue
-					player.username = username
-					player.makeRequest(JAWMethods.LOGIN)
 	elif args[0] == "exit":
 		player.makeRequest(JAWMethods.EXIT)
-	elif args[0] == "who":
+	elif args[0] == "who" and player.isLoggedIn:
 		player.makeRequest(JAWMethods.WHO)
-	elif args[0] == "play":
+	elif args[0] == "play" and player.isLoggedIn:
 		if player.status == False:
 			print "Already in a game!"
 		elif args[1] == player.username:
@@ -255,10 +257,10 @@ def processStdin(stdinInput):
 		else:
 			player.makeRequest(JAWMethods.PLAY, arg=args[1])
 			# print "Waiting for server ..."
-	elif args[0] == "games":
+	elif args[0] == "games" and player.isLoggedIn:
 		player.makeRequest(JAWMethods.GAMES)
 		print "Requesting games from the server ..."
-	elif args[0] == "place":
+	elif args[0] == "place" and player.isLoggedIn:
 		if not player.status:
 			if len(args) == 2 and len(args[1]) == 1 and args[1][0] > '0' and args[1][0] <= '9':
 				player.makeRequest(JAWMethods.PLACE, args[1][0])
@@ -268,8 +270,30 @@ def processStdin(stdinInput):
 				print "\t\t\t\t- place your symbol at the corresponding poisition labeled in grid above"
 	# elif args[0] == "observe":
 	# 	print "if len(args) == 2"
+	elif args[0] == "login" and not player.isLoggedIn:
+		if player.isLoggedIn:
+			print "You have already logged in"
+		elif len(args) == 2:
+			if checkUsername(args[1]):
+				player.username = args[1]
+				player.makeRequest(JAWMethods.LOGIN)
+			else:
+				print "Username must be alphanumeric and not contain any spaces!"
+				# while True:
+				# 	try:
+				# 		username = raw_input("")
+				# 		if checkUsername(username):
+				# 			break
+				# 		print "Username must be alphanumeric and not contain any spaces!"
+				# 	except EOFError:
+				# 		continue
+				# 	player.username = username
+				# 	player.makeRequest(JAWMethods.LOGIN)
 	else:
-		print "invalid command\n"
+		if player.isLoggedIn:
+			print "Invalid command: ", args[0]
+		else:
+			print "Please login first!"
 
 def checkResponseProtocol(packet):
 	'''
@@ -339,7 +363,7 @@ def help():
 
 if __name__ == "__main__":
 	global debug
-	debug = True 				# False-turn off debugging		True- Turn on debugging
+	debug = False 				# False-turn off debugging		True- Turn on debugging
 	# parse commandline arguments
 	usage = "%(prog)s serverName serverPort"
 	ap = ArgumentParser(usage = usage)

@@ -61,6 +61,9 @@ class Board(object):
 		return None
 
 	def place(self, move):
+		'''
+
+		'''
 		if self.isValidMove(move):
 			self.board[move - 1] = 1 if self.player1 == self.currentPlayer else 2
 			self.currentPlayer = self.player2 if self.player1 == self.currentPlayer else self.player1
