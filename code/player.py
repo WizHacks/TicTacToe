@@ -67,7 +67,6 @@ class Player(object):
 		self.move = move
 		self.lastRequestSent = JAWMethods.PLACE
 		self.sendMessage(message)
-		#print "From place(" + move+ ")"
 
 	def retransmit(self):
 		'''
@@ -128,6 +127,8 @@ def processResponse(player, responseList):
 		# PRINT
 		elif (player.lastRequestSent == JAWMethods.PLACE or player.lastRequestSent == JAWMethods.LOGIN or player.lastRequestSent == JAWMethods.PLAY) and responseList[3][:responseList[3].find(":")] == JAWResponses.PRINT:
 			board = responseList[3][responseList[3].find(":")+1:]
+			if board == ".........":
+				print "A game has started ~"
 			print board[:3] + "\n" + board[3:6] + "\n" + board[6:]
 			player.status = False
 		# PLAYER
@@ -141,13 +142,11 @@ def processResponse(player, responseList):
 		elif player.lastRequestSent == JAWMethods.WHO and responseList[3][:responseList[3].find(":")] == JAWResponses.PLAYERS:
 			playersList = responseList[3][responseList[3].find(":")+1:].split(",")
 			if playersList[0] == "":
-				print "No users online!"
+				print "No available users online!"
 			else:
-				players = ""
+				print "Users online:"
 				for player in playersList:
-					players += player + "\n"
-				print "Users online:\n%s" %(players)
-
+					print player
 
 	# What happens if server sends me 400?
 	if responseList[1] == JAWStatusNum.ERROR_NUM and responseList[2] == JAWStatuses.ERROR:
@@ -230,14 +229,13 @@ def processStdin(stdinInput):
 			if len(args) == 2 and len(args[1]) == 1 and args[1][0] > '0' and args[1][0] <= '9':
 				player.makeRequest(JAWMethods.PLACE, args[1][0])
 			else:
-				print "Invalid number of arguments\nExpected: place [index]\t [ 1, 2, 3]"
-				print "\t\t\t [ 4, 5, 6]"
-				print "\t\t\t [ 7, 8, 9]"
+				print "Invalid number of arguments"
+				print "Expected: place [index]\t [ 1, 2, 3]\n\t\t\t [ 4, 5, 6]\n\t\t\t [ 7, 8, 9]"
 				print "\t\t\t\t- place your symbol at the corresponding poisition labeled in grid above"
 	# elif args[0] == "observe":
 	# 	print "if len(args) == 2"
 	else:
-		print "invalid command "
+		print "invalid command\n"
 
 def checkResponseProtocol(packet):
 	'''
@@ -293,19 +291,19 @@ def help():
 	'''
 	Prints the help menu
 	'''
-	print "login [username] \t- logs into a server with unique id.  Force quits if username is already taken"
+	print "login [username] \t- logs into a server with unique id."
 	print "place [index]\t [ 1, 2, 3]\n\t\t [ 4, 5, 6]\n\t\t [ 7, 8, 9]"
 	print "\t\t\t- place your symbol at the corresponding poisition labeled in grid above"
 	print "exit\t\t\t- quits the program at any time"
 	print "games\t\t\t- obtains a list of all ongoing games along with their respective gameID and players"
 	print "who\t\t\t- obtains a list of all players available to play"
 	print "play [player] \t\t- challenges the specified player if s/he is available to play"
-	print "observe [gameID]\t- tunes into the the specified game"
-	print "unobserve [gameID]\t- stops receiving incoming data about particular game\n"
+	# print "observe [gameID]\t- tunes into the the specified game"
+	# print "unobserve [gameID]\t- stops receiving incoming data about particular game\n"
 
 if __name__ == "__main__":
 	global debug
-	debug = False 				# False-turn off debugging		True- Turn on debugging
+	debug = True 				# False-turn off debugging		True- Turn on debugging
 	# parse commandline arguments
 	usage = "%(prog)s serverName serverPort"
 	ap = ArgumentParser(usage = usage)
@@ -373,7 +371,6 @@ if __name__ == "__main__":
 					print ""
 				elif fileno == stdinfd:
 					userinput = sys.stdin.read(128).strip()
-					# print "STDIN: " + userinput
 					processStdin(userinput)
 				else:
 					print "Not suppose to print"
