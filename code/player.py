@@ -9,6 +9,9 @@ global player
 global debug
 
 class Player(object):
+	'''
+	Player class, used as client when talking to server
+	'''
 	def __init__(self, username, server, status=True, gameId=0, timeLoggedIn = None):
 		self.username = username
 		self.status = status
@@ -62,6 +65,7 @@ class Player(object):
 	def place(self, move):
 		'''
 		Send request to server to place move at given location
+		@param move number 1-9 location to place the mark
 		'''
 		message = JAWMisc.JAW + " " + JAWMethods.PLACE + " " + move + " " + JAWMisc.CRNLCRNL
 		self.move = move
@@ -71,14 +75,14 @@ class Player(object):
 
 	def retransmit(self):
 		'''
-		Send request to server to place move at given location
+		Send request to server to retransmit last message
 		'''
 		message = JAWMisc.JAW + " " + JAWMethods.RETRANSMIT + " " + JAWMisc.CRNLCRNL
 		self.sendMessage(message)
 
 	def games(self):
 		'''
-		Send request to server to get the ongoing games
+		Send request to server to get the list of ongoing games
 		'''
 		message = JAWMisc.JAW + " " + JAWMethods.GAMES + " " + JAWMisc.CRNLCRNL
 		self.lastRequestSent = JAWMethods.GAMES
@@ -86,6 +90,11 @@ class Player(object):
 
 	'''Helper methods'''
 	def makeRequest(self, request, arg=None):
+		'''
+		Have the player client make a request
+		@param request the request to make
+		@param arg for play and place
+		'''
 		if request == JAWMethods.LOGIN:			
 			self.login()
 		elif request == JAWMethods.PLAY:
@@ -97,8 +106,7 @@ class Player(object):
 		elif request == JAWMethods.EXIT:
 			self.exit()
 		elif request == JAWMethods.RETRANSMIT:
-			self.retransmit()
-			# print "---------------------------------------------------------"
+			self.retransmit()			
 		elif request == JAWMethods.GAMES:
 			self.games()
 		else:
@@ -114,6 +122,9 @@ class Player(object):
 			print "SENT: " + message
 
 	def createPlayerDictionary(self):
+		'''
+		Create dictionary representing player info
+		'''
 		playerDictionary = {}
 		playerDictionary['username'] = self.username
 		playerDictionary['status'] = self.status
@@ -125,8 +136,7 @@ class Player(object):
 def processResponse(player, responseList):
 	'''
 	Process the response message returned by the server and take appropriate action
-	@param requestState player request state
-	@param response response received from the server
+	@param responseList the list of responses args	
 	'''
 	if responseList[1] == JAWStatusNum.OK_NUM and responseList[2] == JAWStatuses.OK:
 		if debug:
@@ -169,8 +179,8 @@ def processResponse(player, responseList):
 					playerStart = game.find("-")						
 					gameid = game[:playerStart]
 					playersList = game[playerStart+1:].split(',')					
-					games += "Game ID: " + gameid + "\nPlayers: " + playersList[0] + ", "+ playersList[1] + "\n"
-				print "Games in progress:\n%s" %(games)
+					games += "\nGame ID: " + gameid + "\nPlayers: " + playersList[0] + ", "+ playersList[1] + "\n"
+				print "Games in progress:\n" + "-"*25 + "%s" %(games)
 
 	# What happens if server sends me 400?
 	if responseList[1] == JAWStatusNum.ERROR_NUM and responseList[2] == JAWStatuses.ERROR:
@@ -207,7 +217,7 @@ def processResponse(player, responseList):
 
 	if responseList[1] == JAWStatusNum.USER_QUIT_NUM and responseList[2] == JAWStatuses.USER_QUIT and player.lastRequestSent == JAWMethods.EXIT:
 		if responseList[3][responseList[3].find(":") + 1:] == player.username:
-			print player.username + "Logging off ..."
+			print "Goodbye world, %s ... " %(player.username)
 			exit(1)
 
 def processStdin(stdinInput):
@@ -222,7 +232,7 @@ def processStdin(stdinInput):
 	if args[0] == "help":
 		help()
 	elif args[0] == "whoami" and player.isLoggedIn:
-		print player.username		
+		print "Who is " + player.username		
 	elif args[0] == "exit":
 		player.makeRequest(JAWMethods.EXIT)
 	elif args[0] == "who" and player.isLoggedIn:
@@ -247,12 +257,12 @@ def processStdin(stdinInput):
 				print "\t\t\t [ 4, 5, 6]"
 				print "\t\t\t [ 7, 8, 9]"
 				print "\t\t\t\t- place your symbol at the corresponding poisition labeled in grid above"
+		else:
+			print "Please start a game first!"
 	# elif args[0] == "observe":
 	# 	print "if len(args) == 2"
 	elif args[0] == "login" and not player.isLoggedIn:
-		if player.isLoggedIn:
-			print "You have already logged in"
-		elif len(args) == 2:
+		if len(args) == 2:
 			if checkUsername(args[1]):
 				player.username = args[1]
 				player.makeRequest(JAWMethods.LOGIN)
@@ -270,13 +280,17 @@ def processStdin(stdinInput):
 				# 	player.makeRequest(JAWMethods.LOGIN)
 	else:
 		if player.isLoggedIn: 
-			print "Invalid command: ", args[0]
+			if args[0] == "login":
+				print 'Already logged in as %s!' %(player.username)
+			else:
+				print "Invalid command: ", args[0]
 		else:
 			print "Please login first!"
 
 def checkResponseProtocol(packet):
 	'''
 	Checks to see if response from server is valid protocol
+	@param packet the packet
 	@return list of extracted protocol details
 	'''
 	statusCodes = [JAWStatuses.OK, JAWStatuses.ERROR, JAWStatuses.USERNAME_TAKEN,
@@ -355,7 +369,7 @@ if __name__ == "__main__":
 	serverPort = int(args.serverPort)
 
 	epoll = select.epoll()
-	print "Welcome to TicTacToe!"
+	print "Welcome to TicTacToc!"
 	sys.stdout.flush()
 	# username = raw_input("")
 	# if not checkUsername(username):
