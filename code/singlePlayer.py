@@ -193,7 +193,7 @@ def processStdin(stdinInput):
 	elif args[0] == "exit":
 		player.makeRequest(JAWMethods.EXIT)
 		return True
-	elif args[0] == "place":
+	elif args[0] == "place" and player.isLoggedIn:
 		if not player.status:
 			if len(args) == 2 and len(args[1]) == 1 and args[1][0] > '0' and args[1][0] <= '9':
 				player.makeRequest(JAWMethods.PLACE, args[1][0])
@@ -211,7 +211,13 @@ def processStdin(stdinInput):
 			else:
 				print "Username must be alphanumeric and not contain any spaces!"
 	else:
-		print "invalid command "
+		if player.isLoggedIn:
+			if args[0] == "login":
+				print 'Already logged in as %s!' %(player.username)
+			else:
+				print "Invalid command: ", args[0]
+		else:
+			print "Please login first!"
 	return False
 
 def checkResponseProtocol(packet):
@@ -399,6 +405,7 @@ if __name__ == "__main__":
 	except socket.error:
 		print "Error connecting to server. Exiting ..."
 	finally:
+		# cleanup
 		epoll.unregister(clientSocket.fileno())
 		epoll.unregister(stdinfd)
 		epoll.close()

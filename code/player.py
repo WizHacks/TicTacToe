@@ -431,6 +431,7 @@ if __name__ == "__main__":
 	except socket.error:
 		print "Error connecting to server. Exiting ..."
 	finally:
+		# cleanup
 		epoll.unregister(clientSocket.fileno())
 		epoll.unregister(stdinfd)
 		epoll.close()
