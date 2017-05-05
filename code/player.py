@@ -11,6 +11,13 @@ global debug
 class Player(object):
 	'''
 	Player class, used as client when talking to server
+	username: username of the player
+	status: True (Available), False (Busy)
+	gameId: gameid of the game the player is in
+	timeLoggedIn: Datetime value of login time
+	lastRequestSent: keep track of the last request sent to server
+	isLoggedIn: whether the client has logged in successively or nor
+	opponent: the opposing player in a game
 	'''
 	def __init__(self, username, server, status=True, gameId=0, timeLoggedIn = None):
 		self.username = username
@@ -62,6 +69,7 @@ class Player(object):
 		message = JAWMisc.JAW + " " + JAWMethods.EXIT + " " + JAWMisc.CRNLCRNL
 		self.lastRequestSent = JAWMethods.EXIT
 		self.sendMessage(message)
+		print "Goodbye world, %s ... " %(player.username)		
 
 	def place(self, move):
 		'''
@@ -146,15 +154,15 @@ def processResponse(player, responseList):
 			player.isLoggedIn = True
 			print "Hello World,", player.username + "!"
 			print "Logged in successfully at time: ", time.strftime("%b %d %Y %H:%M:%S", time.gmtime(player.timeLoggedIn))
+		
 		# PRINT
 		elif (player.lastRequestSent == JAWMethods.PLACE or player.lastRequestSent == JAWMethods.LOGIN or player.lastRequestSent == JAWMethods.PLAY or player.lastRequestSent == JAWMethods.GAMES or player.lastRequestSent == JAWMethods.WHO) and responseList[3][:responseList[3].find(":")] == JAWResponses.PRINT:
 			board = responseList[3][responseList[3].find(":")+1:]
 			if board == ".........":
-				#print player.opponent
-				#print player
 				print "A game has started ~"
 			print board[:3] + "\n" + board[3:6] + "\n" + board[6:]
 			player.status = False
+		
 		# PLAYER
 		elif (player.lastRequestSent == JAWMethods.PLACE or player.lastRequestSent == JAWMethods.LOGIN or player.lastRequestSent == JAWMethods.PLAY) and responseList[3][:responseList[3].find(":")] == JAWResponses.PLAYER:
 			playerTurn = responseList[3][responseList[3].find(":")+1:]
@@ -165,6 +173,7 @@ def processResponse(player, responseList):
 					player.opponent = playerTurn					
 
 				print "Waiting for %s's move..." %(player.opponent)
+		
 		# PLAYERS
 		elif player.lastRequestSent == JAWMethods.WHO and responseList[3][:responseList[3].find(":")] == JAWResponses.PLAYERS:
 			playersList = responseList[3][responseList[3].find(":")+1:].split(",")
@@ -175,7 +184,6 @@ def processResponse(player, responseList):
 				for player in playersList:
 					print player
 		# GAMES
-
 		elif player.lastRequestSent == JAWMethods.GAMES and responseList[3][:responseList[3].find(":")] == JAWResponses.GAMES:
 			gamesList = responseList[3][responseList[3].find(":")+1:].split(";")
 			if gamesList[0] == "":
@@ -190,29 +198,30 @@ def processResponse(player, responseList):
 					games += "\nGame ID: " + gameid + "\nPlayers: " + playersList[0] + ", "+ playersList[1] + "\n"
 				print "Games in progress:\n" + "-"*25 + "%s" %(games)
 
-	# What happens if server sends me 400?
+	# 400 ERROR
 	if responseList[1] == JAWStatusNum.ERROR_NUM and responseList[2] == JAWStatuses.ERROR:
 		print "Server sent a 400 ERROR"
 		exit(1)
-
+	
+	# 401 USERNAME TAKEN
 	if responseList[1] == JAWStatusNum.USERNAME_TAKEN_NUM and responseList[2] == JAWStatuses.USERNAME_TAKEN and player.lastRequestSent == JAWMethods.LOGIN:
 		print "Username as been taken, please try again!"
-		return JAWMethods.LOGIN.lower()
-
+	
+	# 402 USER BUSY	
 	if responseList[1] == JAWStatusNum.USER_BUSY_NUM and responseList[2] == JAWStatuses.USER_BUSY and player.lastRequestSent == JAWMethods.PLAY:
 		print "Opponent %s is busy!" %(player.opponent)
 		player.opponent = None
-		return None
-
+	
+	# 403 USERNAME NOT FOUND
 	if responseList[1] == JAWStatusNum.USER_NOT_FOUND_NUM and responseList[2] == JAWStatuses.USER_NOT_FOUND and player.lastRequestSent == JAWMethods.PLAY:
 		print "Opponent %s does not exist!" %(player.opponent)
 		player.opponent = None
-		return None
-
+	
+	# 404 INVALID MOVE 
 	if responseList[1] == JAWStatusNum.INVALID_MOVE_NUM and responseList[2] == JAWStatuses.INVALID_MOVE and player.lastRequestSent == JAWMethods.PLACE:
 		print "Invalid move: %s" %(player.move)
-		return None
-
+	
+	# 201 GAME END 	
 	if responseList[1] == JAWStatusNum.GAME_END_NUM and responseList[2] == JAWStatuses.GAME_END and responseList[3][:responseList[3].find(":")] == JAWResponses.WINNER:
 		if responseList[3][responseList[3].find(":") + 1:] == player.username:
 			print "Congratulations, you won!"
@@ -221,12 +230,7 @@ def processResponse(player, responseList):
 		else:
 			print "You lost, better luck next time!"
 		player.status = True
-		return None	# this means someone won
-
-	if responseList[1] == JAWStatusNum.USER_QUIT_NUM and responseList[2] == JAWStatuses.USER_QUIT and player.lastRequestSent == JAWMethods.EXIT:
-		if responseList[3][responseList[3].find(":") + 1:] == player.username:
-			print "Goodbye world, %s ... " %(player.username)
-			exit(1)
+		# this means someone won		
 
 def processStdin(stdinInput):
 	'''
@@ -237,14 +241,20 @@ def processStdin(stdinInput):
 	args = stdinInput.split(" ")
 	# print "STDIN ", args
 	args[0] = args[0].lower()
+	# HELP
 	if args[0] == "help":
 		help()
+	# WHOAMI
 	elif args[0] == "whoami" and player.isLoggedIn:
 		print "Who is " + player.username
+	# EXIT
 	elif args[0] == "exit":
 		player.makeRequest(JAWMethods.EXIT)
+		return True
+	# WHO
 	elif args[0] == "who" and player.isLoggedIn:
 		player.makeRequest(JAWMethods.WHO)
+	# PLAY
 	elif args[0] == "play" and player.isLoggedIn:
 		if player.status == False:
 			print "Already in a game!"
@@ -252,10 +262,11 @@ def processStdin(stdinInput):
 			print "Cannot play yourself!"
 		else:
 			player.makeRequest(JAWMethods.PLAY, arg=args[1])
-			# print "Waiting for server ..."
+	# GAMES			
 	elif args[0] == "games" and player.isLoggedIn:
 		player.makeRequest(JAWMethods.GAMES)
 		print "Requesting games from the server ..."
+	# PLACE
 	elif args[0] == "place" and player.isLoggedIn:
 		if not player.status:
 			if len(args) == 2 and len(args[1]) == 1 and args[1][0] > '0' and args[1][0] <= '9':
@@ -268,23 +279,14 @@ def processStdin(stdinInput):
 			print "Please start a game first!"
 	# elif args[0] == "observe":
 	# 	print "if len(args) == 2"
+	# LOGIN
 	elif args[0] == "login" and not player.isLoggedIn:
 		if len(args) == 2:
 			if checkUsername(args[1]):
 				player.username = args[1]
 				player.makeRequest(JAWMethods.LOGIN)
 			else:
-				print "Username must be alphanumeric and not contain any spaces!"
-				# while True:
-				# 	try:
-				# 		username = raw_input("")
-				# 		if checkUsername(username):
-				# 			break
-				# 		print "Username must be alphanumeric and not contain any spaces!"
-				# 	except EOFError:
-				# 		continue
-				# 	player.username = username
-				# 	player.makeRequest(JAWMethods.LOGIN)
+				print "Username must be alphanumeric and not contain any spaces!"				
 	else:
 		if player.isLoggedIn:
 			if args[0] == "login":
@@ -293,12 +295,13 @@ def processStdin(stdinInput):
 				print "Invalid command: ", args[0]
 		else:
 			print "Please login first!"
+	return False
 
 def checkResponseProtocol(packet):
 	'''
 	Checks to see if response from server is valid protocol
 	@param packet the packet
-	@return list of extracted protocol details
+	@return list of extracted protocol details, [] is retransmission
 	'''
 	statusCodes = [JAWStatuses.OK, JAWStatuses.ERROR, JAWStatuses.USERNAME_TAKEN,
 				JAWStatuses.USER_BUSY, JAWStatuses.USER_NOT_FOUND, JAWStatuses.INVALID_MOVE,
@@ -307,8 +310,7 @@ def checkResponseProtocol(packet):
 				JAWResponses.PLAYERS, JAWResponses.QUIT, JAWResponses.GAMES]
 
 	args = []
-	# print packet
-	# print packet.count(JAWMisc.CRNLCRNL)
+	# HAS exactly 1 JAWMisc.CRNLCRNL
 	if packet.count(JAWMisc.CRNLCRNL) == 1:
 		args = packet.strip().split()
 		if debug:
@@ -325,6 +327,7 @@ def checkResponseProtocol(packet):
 			print "Invalid status code\nExpected:OK,ERROR,USERNAME_TAKEN,USER_BUSY,USER_NOT_FOUND,",
 			print "INVALID_MOVE,GAME_END,USER_QUIT\n Found: ", args[2]
 			return None
+		# HAS RESPONSE BODY	
 		if packet.count(JAWMisc.CRNL) == 3:
 			if len(args) != 4:
 				print "Invalid protocol length"
@@ -342,7 +345,7 @@ def checkResponseProtocol(packet):
 	return args
 
 def checkUsername(username):
-	'''Determine whether the username is valid or not'''
+	'''Determine whether the username is alphanumeric and does not contain spaces '''
 	if username.isalnum():
 		return username.find(" ") == -1 and len(username) != 0
 	return 0
@@ -377,22 +380,14 @@ if __name__ == "__main__":
 
 	epoll = select.epoll()
 	print "Welcome to TicTacToc!"
-	sys.stdout.flush()
-	# username = raw_input("")
-	# if not checkUsername(username):
-	# 	print "Username must not contain any spaces!"
-	# 	exit(1)
+	sys.stdout.flush()	
 
 	try:
 		clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		clientSocket.connect((serverName,serverPort))
-
+		# Default player skeleton
 		player = Player("", clientSocket)
-
-		# prompt user to log in
-		# player.login()
-		# dont wait for login response from server, user may wish to exit instead
-		# while loop here
+		
 		# poll stdin and client socket
 		stdinfd = sys.stdin.fileno()
 		fcntl.fcntl(stdinfd, fcntl.F_SETFL, fcntl.fcntl(stdinfd, fcntl.F_GETFL) | os.O_NONBLOCK)
@@ -406,11 +401,7 @@ if __name__ == "__main__":
 		while True:
 			events = epoll.poll(0.01) # file no and event code
 			for fileno, event in events:
-				if event & select.EPOLLHUP:
-					# epoll.unregister(fileno)
-					# epoll.unregister(stdinfd)
-					# epoll.close()
-					# clientSocket.close()
+				if event & select.EPOLLHUP:					
 					print "Lost connection to server\n Exiting..."
 					exit(1)
 				if fileno == clientSocket.fileno():
@@ -420,17 +411,20 @@ if __name__ == "__main__":
 					if len(response) == 0:
 						print "Lost connection to server\n Exiting..."
 						exit(1)
+					# Check protocol format
 					args = checkResponseProtocol(response)
 					if args != None and len(args) != 0:
-						action = processResponse(player, args)
-						if action != None:
-							processStdin(action)
+						# Process response
+						processResponse(player, args)						
+					# Received empty packet from server, ask for retransmission
 					else:
 						player.makeRequest(JAWMethods.RETRANSMIT)
 					print ""
 				elif fileno == stdinfd:
 					userinput = sys.stdin.read(128).strip()
-					processStdin(userinput)
+					quit = processStdin(userinput)
+					if quit:
+						exit(1)
 				else:
 					print "Not suppose to print"
 

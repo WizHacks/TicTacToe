@@ -11,6 +11,7 @@ class Board(object):
 	def __str__(self):
 		'''
 		the 'toString' method for our Board class
+		@return String representation of the Tic Tac Toc game board
 		'''
 		boardString = ""
 		for i in range(0, len(self.board)):
@@ -23,6 +24,7 @@ class Board(object):
 	def gameFinished(self):
 		'''
 		tests to see if the game has finished
+		@return String Winner if there is one. Draw if there is one. Otherwise, None.
 		'''
 		winner = 0
 		# first row
@@ -63,6 +65,8 @@ class Board(object):
 	def place(self, move):
 		'''
 		places the board piece in spcified position, places symbol based on currentPlayer
+		@param move The position of the game board
+		@return boolean True if a move was placed. Otherwise, false.
 		'''
 		if self.isValidMove(move):
 			self.board[move - 1] = 1 if self.player1 == self.currentPlayer else 2
@@ -75,6 +79,8 @@ class Board(object):
 	def isValidMove(self, move):
 		'''
 		determines if the specified location is valid
+		@param move The position of the game board
+		@return boolean True if move is valid. Otherwise, false
 		'''
 		if move > 9 or move < 0 or self.board[move-1] != 0:
 			print("Illegal Move")
