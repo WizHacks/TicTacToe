@@ -6,7 +6,7 @@ import socket, select
 import sys, os, fcntl
 
 global player
-
+global debug
 
 class Player(object):
 	def __init__(self, username, server, status=True, gameId=0, timeLoggedIn = None):
@@ -90,7 +90,7 @@ class Player(object):
 			self.exit()
 		elif request == JAWMethods.RETRANSMIT:
 			self.retransmit()
-			print "---------------------------------------------------------"
+			# print "---------------------------------------------------------"
 		else:
 			print "No such request!"
 
@@ -100,7 +100,8 @@ class Player(object):
 		@param message the message to send to server
 		'''
 		clientSocket.send(message)
-		print "SENT: " + message
+		if debug:
+			print "SENT: " + message
 
 	def createPlayerDictionary(self):
 		playerDictionary = {}
@@ -118,7 +119,8 @@ def processResponse(player, responseList):
 	@param response response received from the server
 	'''
 	if responseList[1] == JAWStatusNum.OK_NUM and responseList[2] == JAWStatuses.OK:
-		print "Last request: " + player.lastRequestSent
+		if debug:
+			print "Last request: " + player.lastRequestSent
 		# LOGIN
 		if len(responseList) == 3 and player.lastRequestSent == JAWMethods.LOGIN:
 			player.isLoggedIn = True
@@ -132,7 +134,7 @@ def processResponse(player, responseList):
 		elif (player.lastRequestSent == JAWMethods.PLACE or player.lastRequestSent == JAWMethods.LOGIN or player.lastRequestSent == JAWMethods.PLAY) and responseList[3][:responseList[3].find(":")] == JAWResponses.PLAYER:
 			playerTurn = responseList[3][responseList[3].find(":")+1:]
 			if player.username == playerTurn:
-				print "Your turn, please place a move:"
+				print "Your turn, please place a move: (hint: place [0-9])"
 			else:
 				print "Waiting for opponent move..."
 		# PLAYERS
@@ -145,7 +147,7 @@ def processResponse(player, responseList):
 				for player in playersList:
 					players += player + "\n"
 				print "Users online:\n%s" %(players)
-			
+
 
 	# What happens if server sends me 400?
 	if responseList[1] == JAWStatusNum.ERROR_NUM and responseList[2] == JAWStatuses.ERROR:
@@ -195,6 +197,8 @@ def processStdin(stdinInput):
 	args[0] = args[0].lower()
 	if args[0] == "help":
 		help()
+	if args[0] == "whoami":
+		print player.username
 	elif args[0] == "login" or not player.isLoggedIn:
 		if player.isLoggedIn:
 			print "You have already logged in"
@@ -220,7 +224,7 @@ def processStdin(stdinInput):
 			print "Cannot play yourself!"
 		else:
 			player.makeRequest(JAWMethods.PLAY, arg=args[1])
-			print "Waiting for server ..."
+			# print "Waiting for server ..."
 	elif args[0] == "place":
 		if not player.status:
 			if len(args) == 2 and len(args[1]) == 1 and args[1][0] > '0' and args[1][0] <= '9':
@@ -229,7 +233,7 @@ def processStdin(stdinInput):
 				print "Invalid number of arguments\nExpected: place [index]\t [ 1, 2, 3]"
 				print "\t\t\t [ 4, 5, 6]"
 				print "\t\t\t [ 7, 8, 9]"
-				print "\t\t\t\t- place your symbol at the corresponding poisition labeled in grid above"		
+				print "\t\t\t\t- place your symbol at the corresponding poisition labeled in grid above"
 	# elif args[0] == "observe":
 	# 	print "if len(args) == 2"
 	else:
@@ -251,7 +255,8 @@ def checkResponseProtocol(packet):
 	# print packet.count(JAWMisc.CRNLCRNL)
 	if packet.count(JAWMisc.CRNLCRNL) == 1:
 		args = packet.strip().split()
-		print "args: ", args
+		if debug:
+			print "args: ", args
 		if args[0] != JAWMisc.JAW:
 			print "Invalid format -> required protocol to begin with JAW/1.0"
 			return None
@@ -276,7 +281,8 @@ def checkResponseProtocol(packet):
 			if len(args) != 3:
 				print "Invalid protocol length"
 				return None
-	print "response protocol: ", args
+	if debug:
+		print "response protocol: ", args
 	return args
 
 def checkUsername(username):
@@ -288,18 +294,18 @@ def help():
 	Prints the help menu
 	'''
 	print "login [username] \t- logs into a server with unique id.  Force quits if username is already taken"
-	print "place [index]\t [ 1, 2, 3]"
-	print "\t\t [ 4, 5, 6]"
-	print "\t\t [ 7, 8, 9]"
+	print "place [index]\t [ 1, 2, 3]\n\t\t [ 4, 5, 6]\n\t\t [ 7, 8, 9]"
 	print "\t\t\t- place your symbol at the corresponding poisition labeled in grid above"
 	print "exit\t\t\t- quits the program at any time"
 	print "games\t\t\t- obtains a list of all ongoing games along with their respective gameID and players"
 	print "who\t\t\t- obtains a list of all players available to play"
 	print "play [player] \t\t- challenges the specified player if s/he is available to play"
 	print "observe [gameID]\t- tunes into the the specified game"
-	print "unobserve [gameID]\t- stops receiving incoming data about particular game"
+	print "unobserve [gameID]\t- stops receiving incoming data about particular game\n"
 
 if __name__ == "__main__":
+	global debug
+	debug = False 				# False-turn off debugging		True- Turn on debugging
 	# parse commandline arguments
 	usage = "%(prog)s serverName serverPort"
 	ap = ArgumentParser(usage = usage)
@@ -358,13 +364,13 @@ if __name__ == "__main__":
 						print "Lost connection to server\n Exiting..."
 						exit(1)
 					args = checkResponseProtocol(response)
-					# print "ARGS: ",args
 					if args != None and len(args) != 0:
 						action = processResponse(player, args)
 						if action != None:
 							processStdin(action)
 					else:
 						player.makeRequest(JAWMethods.RETRANSMIT)
+					print ""
 				elif fileno == stdinfd:
 					userinput = sys.stdin.read(128).strip()
 					# print "STDIN: " + userinput

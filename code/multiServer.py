@@ -1,6 +1,7 @@
 from socket import *
 import select, uuid, board, json
 
+global debug
 serverSocket = socket(AF_INET, SOCK_STREAM)
 serverSocket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
 serverPort = 9347 # Default port number
@@ -98,7 +99,7 @@ class Server(object):
 			otherPlayer['gameId'] = None
 			otherPlayer['status'] = True
 			fNum = fileno
-			
+
 			# Remove quitting player and its corresponding ePoll connection
 			epoll.unregister(fileno)
 			self.connections[fNum].close()
@@ -163,7 +164,8 @@ class Server(object):
 		epoll.modify(fileno, select.EPOLLOUT)
 		self.connections[fileno].send(message)
 		epoll.modify(fileno, select.EPOLLIN | select.EPOLLET)
-		print "Sent: " + message # Log server action
+		if debug:
+			print "Sent: " + message # Log server action
 		return
 
 
@@ -185,7 +187,8 @@ class Server(object):
 		# Receive incoming data
 		connection = self.connections[fileno]
 		request = connection.recv(1024).decode()
-		print request # Log server action
+		if debug:
+			print request # Log server action
 
 		# Check for invalid protocol
 		if (len(request) == 0):
@@ -254,7 +257,7 @@ class Server(object):
 				validMove = currentGame.place(int(requests[2]))
 				if validMove:
 					otherPlayer = currentGame.currentPlayer
-					print currentPlayer 
+					print currentPlayer
 					print otherPlayer
 					self.broadcast("JAW/1.0 200 OK \r\n PRINT:" + str(currentGame) + " \r\n\r\n", [fileno, self.getSocket(otherPlayer)])
 					self.retransmits[fileno] = ["JAW/1.0 200 OK \r\n PRINT:" + str(currentGame) + " \r\n\r\n"]
@@ -323,7 +326,7 @@ class Server(object):
 				self.retransmits[fileno] = [info]
 				self.sendMessage(info, fileno)
 		# GAMES
-		elif requests[1] == "GAMES"
+		elif requests[1] == "GAMES":
 			if len(requests) < 2:
 				# Invalid command usage
 				self.sendMessage("JAW/1.0 400 ERROR \r\n\r\n", fileno)
@@ -331,7 +334,7 @@ class Server(object):
 				# Gets list of all current Games
 				games = self.getGames()
 				self.sendMessage("JAW/1.0 200 OK \r\n GAMES:" + games + " \r\n\r\n", fileno)
-				self.retransmits[fileno] = ["JAW/1.0 200 OK \r\n GAMES:" + games + " \r\n\r\n"]	
+				self.retransmits[fileno] = ["JAW/1.0 200 OK \r\n GAMES:" + games + " \r\n\r\n"]
 		# RETRANSMIT
 		elif requests[1] == "RETRANSMIT":
 			if len(requests) < 2:
@@ -372,6 +375,7 @@ class Server(object):
 server = Server()
 
 if __name__ == '__main__':
+	debug = False
 	try:
 		while True:
 			events = epoll.poll(0.01)
@@ -384,7 +388,8 @@ if __name__ == '__main__':
 					server.addConnection(connectionSocket)
 				elif event & select.EPOLLIN:
 					# ePoll connection has incoming data to read
-					print "Receiving data from fileno: " + str(fileno) # Log server action
+					if debug:
+						print "Receiving data from fileno: " + str(fileno) # Log server action
 					server.checkRequestProtocol(fileno)
 				elif event & (select.EPOLLERR | select.EPOLLHUP):
 					# ePoll connection has an error
