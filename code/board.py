@@ -62,7 +62,7 @@ class Board(object):
 
 	def place(self, move):
 		'''
-
+		places the board piece in spcified position, places symbol based on currentPlayer
 		'''
 		if self.isValidMove(move):
 			self.board[move - 1] = 1 if self.player1 == self.currentPlayer else 2
@@ -73,34 +73,27 @@ class Board(object):
 			return False
 
 	def isValidMove(self, move):
-		#global currentPlayer
+		'''
+		determines if the specified location is valid
+		'''
 		if move > 9 or move < 0 or self.board[move-1] != 0:
 			print("Illegal Move")
 			return False
 		return True
 
-	def printBoard(self):
-		for i in range(0, len(self.board)):
-			if self.board[i] == 0:
-				print(" .", end='')
-			else:
-				print(" X" if self.board[i] == 1 else " O", end='')
-			if i % 3 == 2:
-				print("\n")
+	# def addObserver(self, observer):
+	# 	print(observer + " has started watching the game")
+	# 	self.observers.extend([observer])
 
-	def addObserver(self, observer):
-		print(observer + " has started watching the game")
-		self.observers.extend([observer])
+	# def removeObserver(self, observer):
+	# 	if observer in self.observers:
+	# 		print(observer + " has left watching the game")
+	# 		self.observers.remove(observer)
+	# 	else:
+	# 		print(observer + " is already not observing")
 
-	def removeObserver(self, observer):
-		if observer in self.observers:
-			print(observer + " has left watching the game")
-			self.observers.remove(observer)
-		else:
-			print(observer + " is already not observing")
-
-	def comment(self, player, comment):
-		print(player + ": " + comment)
+	# def comment(self, player, comment):
+	# 	print(player + ": " + comment)
 
 	def debug(self):
 		print("\n\nDEBUG\nPlayer 1: " + self.player1)
@@ -110,22 +103,4 @@ class Board(object):
 		for i in self.observers:
 			print(i + " ", end='')
 		print("\nBoard allignment: ")
-		self.printBoard()
-
-def test():
-	board = Board("p1", "p2", "p1")
-	board.place(1)
-	board.place(1)
-	board.place(4)
-	board.place(3)
-	board.place(1)
-	board.addObserver("Wendy")
-	board.addObserver("JJ")
-	board.debug()
-	board.place("JJ")
-	board.removeObserver("JJ")
-	board.debug()
-	board.place(5)
-	board.place(2)
-
-#test()
+		print self

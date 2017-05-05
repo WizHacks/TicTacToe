@@ -363,7 +363,7 @@ def help():
 
 if __name__ == "__main__":
 	global debug
-	debug = False 				# False-turn off debugging		True- Turn on debugging
+	debug = True 				# False-turn off debugging		True- Turn on debugging
 	# parse commandline arguments
 	usage = "%(prog)s serverName serverPort"
 	ap = ArgumentParser(usage = usage)
@@ -376,7 +376,7 @@ if __name__ == "__main__":
 	serverPort = int(args.serverPort)
 
 	epoll = select.epoll()
-	print "Welcome to TicTacToe!"
+	print "Welcome to TicTacToc!"
 	sys.stdout.flush()
 	# username = raw_input("")
 	# if not checkUsername(username):
