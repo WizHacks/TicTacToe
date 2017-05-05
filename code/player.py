@@ -19,6 +19,7 @@ class Player(object):
 		self.server = server
 		self.lastRequestSent = None
 		self.isLoggedIn = False
+		self.opponent = None
 		self.timeLoggedIn = timeLoggedIn if timeLoggedIn != None else None
 
 	def __str__(self):
@@ -147,7 +148,7 @@ def processResponse(player, responseList):
 			print "Hello World, ", player.username + "!"
 			print "Logged in successfully at time: ", time.strftime("%b %d %Y %H:%M:%S", time.gmtime(player.timeLoggedIn))
 		# PRINT
-		elif (player.lastRequestSent == JAWMethods.PLACE or player.lastRequestSent == JAWMethods.LOGIN or player.lastRequestSent == JAWMethods.PLAY) and responseList[3][:responseList[3].find(":")] == JAWResponses.PRINT:
+		elif (player.lastRequestSent == JAWMethods.PLACE or player.lastRequestSent == JAWMethods.LOGIN or player.lastRequestSent == JAWMethods.PLAY or player.lastRequestSent == JAWMethods.GAMES or player.lastRequestSent == JAWMethods.WHO) and responseList[3][:responseList[3].find(":")] == JAWResponses.PRINT:
 			board = responseList[3][responseList[3].find(":")+1:]
 			print board[:3] + "\n" + board[3:6] + "\n" + board[6:]
 			player.status = False
@@ -157,7 +158,10 @@ def processResponse(player, responseList):
 			if player.username == playerTurn:
 				print "Your turn, please place a move: (hint: place [0-9])"
 			else:
-				print "Waiting for opponent move..."
+				if player.opponent == None:
+					player.opponent = playerTurn					
+
+				print "Waiting for %s's move..." %(player.opponent)
 		# PLAYERS
 		elif player.lastRequestSent == JAWMethods.WHO and responseList[3][:responseList[3].find(":")] == JAWResponses.PLAYERS:
 			playersList = responseList[3][responseList[3].find(":")+1:].split(",")
@@ -256,9 +260,7 @@ def processStdin(stdinInput):
 				print "Invalid number of arguments\nExpected: place [index]\t [ 1, 2, 3]"
 				print "\t\t\t [ 4, 5, 6]"
 				print "\t\t\t [ 7, 8, 9]"
-				print "\t\t\t\t- place your symbol at the corresponding poisition labeled in grid above"
-		else:
-			print "Please start a game first!"
+				print "\t\t\t\t- place your symbol at the corresponding poisition labeled in grid above"		
 	# elif args[0] == "observe":
 	# 	print "if len(args) == 2"
 	elif args[0] == "login" and not player.isLoggedIn:
@@ -356,7 +358,7 @@ def help():
 
 if __name__ == "__main__":
 	global debug
-	debug = False 				# False-turn off debugging		True- Turn on debugging
+	debug = True 				# False-turn off debugging		True- Turn on debugging
 	# parse commandline arguments
 	usage = "%(prog)s serverName serverPort"
 	ap = ArgumentParser(usage = usage)
