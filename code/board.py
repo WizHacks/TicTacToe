@@ -2,13 +2,16 @@ from __future__ import print_function
 
 class Board(object):
 	def __init__(self, player1, player2, currentPlayer):
-		self.player1 = player1
-		self.player2 = player2
-		self.currentPlayer = currentPlayer
-		self.observers=[]
-		self.board = [0, 0, 0, 0, 0, 0, 0, 0, 0]
-
+		self.player1 = player1							# the first player
+		self.player2 = player2							# the second player
+		self.currentPlayer = currentPlayer				# current player
+		self.observers=[]								# additional players obserivng
+		self.board = [0, 0, 0, 0, 0, 0, 0, 0, 0]		# board as specified in help
+														# 0- empty, 1-player1, 2-player2
 	def __str__(self):
+		'''
+		the 'toString' method for our Board class
+		'''
 		boardString = ""
 		for i in range(0, len(self.board)):
 			if self.board[i] == 0:
@@ -18,6 +21,9 @@ class Board(object):
 		return boardString
 
 	def gameFinished(self):
+		'''
+		tests to see if the game has finished
+		'''
 		winner = 0
 		# first row
 		if self.board[0] != 0 and self.board[0] == self.board[1] and self.board[0] == self.board[2]:

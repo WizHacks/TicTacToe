@@ -1,10 +1,10 @@
 from socket import *
-import select, uuid, board, json
+import select, uuid, board, json, time, datetime
 
 global debug
 serverSocket = socket(AF_INET, SOCK_STREAM)
 serverSocket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
-serverPort = 9347
+serverPort = 9347 # Default port number
 serverSocket.bind(('', serverPort))
 serverSocket.listen(1)
 serverSocket.setblocking(0)
@@ -122,7 +122,7 @@ class Server(object):
 		@param p2 Player 2
 		@return game Object of the new game board created
 		'''
-		gameId = uuid.uuid4().hex
+		gameId = uuid.uuid4().int
 		newBoard = board.Board(p1['username'], p2['username'], p1['username'])
 		self.games[gameId] = newBoard
 		p1['gameId'] = gameId
@@ -151,8 +151,8 @@ class Server(object):
 		@return String representation of all games. gameID-player1,player2;gameId-player1,player2;...
 		'''
 		output = ""
-		for key, value in self.players.iteritems():
-			output += key + "-" + value.player1 + "," + value.player2 + ";"
+		for key, value in self.games.iteritems():
+			output += str(key) + "-" + value.player1 + "," + value.player2 + ";"
 		return output[:(len(output)-1)]
 
 	def sendMessage(self, message, fileno):
@@ -165,7 +165,7 @@ class Server(object):
 		self.connections[fileno].send(message)
 		epoll.modify(fileno, select.EPOLLIN | select.EPOLLET)
 		if debug:
-			print "Sent: " + message # Log server action
+			print datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S') + "\tSent to connection " + str(fileno) + ": " + message # Log server action
 		return
 
 
@@ -188,7 +188,7 @@ class Server(object):
 		connection = self.connections[fileno]
 		request = connection.recv(1024).decode()
 		if debug:
-			print request # Log server action
+			print datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S') + "\tReceived request from connection " + str(fileno) + ": " + request # Log server action
 
 		# Check for invalid protocol
 		if (len(request) == 0):
@@ -375,7 +375,7 @@ class Server(object):
 server = Server()
 
 if __name__ == '__main__':
-	debug = False
+	debug = True
 	try:
 		while True:
 			events = epoll.poll(0.01)
@@ -388,8 +388,8 @@ if __name__ == '__main__':
 					server.addConnection(connectionSocket)
 				elif event & select.EPOLLIN:
 					# ePoll connection has incoming data to read
-					if debug:
-						print "Receiving data from fileno: " + str(fileno) # Log server action
+					# if debug:
+					# 	print "Receiving data from fileno: " + str(fileno) # Log server action
 					server.checkRequestProtocol(fileno)
 				elif event & (select.EPOLLERR | select.EPOLLHUP):
 					# ePoll connection has an error
@@ -398,5 +398,5 @@ if __name__ == '__main__':
 		epoll.unregister(serverSocket.fileno())
 		epoll.close()
 		serverSocket.close()
-#scp -P 130 server.py jijli@allv25.all.cs.stonybrook.edu:~
+#scp -P 130 code/* jijli@allv25.all.cs.stonybrook.edu:~/project/
 #ssh -p 130 -o ServerAliveInterval=60 jijli@allv25.all.cs.stonybrook.edu
