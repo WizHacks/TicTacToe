@@ -92,9 +92,16 @@ class Server(object):
 			del self.games[currentPlayer['gameId']]
 
 			# Notify both players who quitted and who won. End the game
-			self.retransmits[self.getSocket(otherPlayer)] = ["JAW/1.0 202 USER_QUIT \r\n QUIT:" + currentPlayer['username'] + " \r\n\r\n", "JAW/1.0 201 GAME_END \r\n WINNER:" + otherPlayer + " \r\n\r\n"]
-			self.broadcast("JAW/1.0 202 USER_QUIT \r\n QUIT:" + currentPlayer['username'] + " \r\n\r\n", [fileno, self.getSocket(otherPlayer)])
-			self.broadcast("JAW/1.0 201 GAME_END \r\n WINNER:" + otherPlayer + " \r\n\r\n", [fileno, self.getSocket(otherPlayer)])
+			try:
+				self.retransmits[self.getSocket(otherPlayer)] = ["JAW/1.0 202 USER_QUIT \r\n QUIT:" + currentPlayer['username'] + " \r\n\r\n", "JAW/1.0 201 GAME_END \r\n WINNER:" + otherPlayer + " \r\n\r\n"]
+				self.broadcast("JAW/1.0 202 USER_QUIT \r\n QUIT:" + currentPlayer['username'] + " \r\n\r\n", [fileno, self.getSocket(otherPlayer)])
+				self.broadcast("JAW/1.0 201 GAME_END \r\n WINNER:" + otherPlayer + " \r\n\r\n", [fileno, self.getSocket(otherPlayer)])
+			except Exception:
+				# Current player did Ctrl+C
+				self.retransmits[self.getSocket(otherPlayer)] = ["JAW/1.0 202 USER_QUIT \r\n QUIT:" + currentPlayer['username'] + " \r\n\r\n", "JAW/1.0 201 GAME_END \r\n WINNER:" + otherPlayer + " \r\n\r\n"]
+				self.broadcast("JAW/1.0 202 USER_QUIT \r\n QUIT:" + currentPlayer['username'] + " \r\n\r\n", [self.getSocket(otherPlayer)])
+				self.broadcast("JAW/1.0 201 GAME_END \r\n WINNER:" + otherPlayer + " \r\n\r\n", [self.getSocket(otherPlayer)])
+
 			otherPlayer = self.getPlayer(otherPlayer)
 			otherPlayer['gameId'] = None
 			otherPlayer['status'] = True
@@ -363,8 +370,6 @@ if __name__ == '__main__':
 					server.addConnection(connectionSocket)
 				elif event & select.EPOLLIN:
 					# ePoll connection has incoming data to read
-					# if debug:
-					# 	print "Receiving data from fileno: " + str(fileno) # Log server action
 					server.checkRequestProtocol(fileno)
 				elif event & (select.EPOLLERR | select.EPOLLHUP):
 					# ePoll connection has an error
