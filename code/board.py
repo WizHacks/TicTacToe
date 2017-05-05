@@ -103,4 +103,4 @@ class Board(object):
 		for i in self.observers:
 			print(i + " ", end='')
 		print("\nBoard allignment: ")
-		print self
+		#print self
