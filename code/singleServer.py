@@ -216,7 +216,7 @@ class Server(object):
 		# LOGIN
 		if requests[1] == "LOGIN":
 			# Invalid command usage
-			if len(requests) < 3 or len(self.connections) > 2:
+			if len(requests) < 3 or len(self.players) > 2:
 				self.sendMessage("JAW/1.0 400 ERROR \r\n\r\n", fileno)
 				fNum = fileno
 				epoll.unregister(fileno)
@@ -364,7 +364,7 @@ class Server(object):
 server = Server()
 
 if __name__ == '__main__':
-	debug = True
+	debug = False # False-turn off debugging/logging		True- Turn on debugging/logging
 	try:
 		while True:
 			events = epoll.poll(1)

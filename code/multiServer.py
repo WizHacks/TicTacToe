@@ -389,7 +389,7 @@ class Server(object):
 server = Server()
 
 if __name__ == '__main__':
-	debug = True
+	debug = False # False-turn off debugging/logging		True- Turn on debugging/logging
 	try:
 		while True:
 			events = epoll.poll(0.01)
