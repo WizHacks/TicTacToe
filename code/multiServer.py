@@ -77,7 +77,12 @@ class Server(object):
 			return
 		if currentPlayer['status'] == True:
 			# Player is not in game
-			self.sendMessage("JAW/1.0 202 USER_QUIT \r\n QUIT:" + currentPlayer['username'] + " \r\n\r\n", fileno)
+			try:
+				self.sendMessage("JAW/1.0 202 USER_QUIT \r\n QUIT:" + currentPlayer['username'] + " \r\n\r\n", fileno)
+			except Exception:
+				# Player closed the connection before server can send message
+				if debug:
+					print datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S') + "\t" + currentPlayer['username'] + " at connection " + str(fileno) + " closed before QUIT message sent."
 			fNum = fileno
 
 			# Remove player and its corresponding ePoll connection
@@ -85,6 +90,7 @@ class Server(object):
 			self.connections[fNum].close()
 			del self.connections[fNum]
 			del self.players[fNum]
+			del self.retransmits[fNum]
 		else:
 			# Player is in game
 			currentGame = self.games[currentPlayer['gameId']]
@@ -112,6 +118,7 @@ class Server(object):
 			self.connections[fNum].close()
 			del self.connections[fNum]
 			del self.players[fNum]
+			del self.retransmits[fNum]
 		return
 
 	def addPlayer(self, connection, player):
