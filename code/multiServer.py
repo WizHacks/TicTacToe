@@ -4,7 +4,7 @@ import select, uuid, board, json
 global debug
 serverSocket = socket(AF_INET, SOCK_STREAM)
 serverSocket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
-serverPort = 9347
+serverPort = 9347 # Default port number
 serverSocket.bind(('', serverPort))
 serverSocket.listen(1)
 serverSocket.setblocking(0)
