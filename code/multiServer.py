@@ -193,9 +193,9 @@ class Server(object):
 			self.sendMessage(message, c)
 		return
 
-	def checkRequestProtocol(self, fileno):
+	def processRequestProtocol(self, fileno):
 		'''
-		Checks the request protocol
+		Processes the request protocol
 		@param fileno Incoming socket connection file descriptor
 		'''
 		# Receive incoming data
@@ -402,7 +402,7 @@ if __name__ == '__main__':
 					server.addConnection(connectionSocket)
 				elif event & select.EPOLLIN:
 					# ePoll connection has incoming data to read
-					server.checkRequestProtocol(fileno)
+					server.processRequestProtocol(fileno)
 				elif event & (select.EPOLLERR | select.EPOLLHUP):
 					# ePoll connection has an error
 					server.removePlayer(fileno)
