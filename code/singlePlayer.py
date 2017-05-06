@@ -198,7 +198,6 @@ def processStdin(stdinInput):
 			if len(args) == 2 and len(args[1]) == 1 and args[1][0] > '0' and args[1][0] <= '9':
 				player.makeRequest(JAWMethods.PLACE, args[1][0])
 			else:
-				print "Invalid number of arguments"
 				print "Expected: place [index]\t [ 1, 2, 3]\n\t\t\t [ 4, 5, 6]\n\t\t\t [ 7, 8, 9]"
 				print "\tPlace your symbol at the corresponding poisition labeled in grid above"
 	# elif args[0] == "observe":
