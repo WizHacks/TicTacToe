@@ -333,7 +333,7 @@ def help():
 	print "exit\t\t\t- quits the program at any time"
 
 if __name__ == "__main__":
-	debug = False
+	debug = True
 	# parse commandline arguments
 	usage = "%(prog)s serverName serverPort"
 	ap = ArgumentParser(usage = usage)

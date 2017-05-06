@@ -366,7 +366,7 @@ def help():
 
 if __name__ == "__main__":
 	global debug
-	debug = True 				# False-turn off debugging		True- Turn on debugging
+	debug = False 				# False-turn off debugging		True- Turn on debugging
 	# parse commandline arguments
 	usage = "%(prog)s serverName serverPort"
 	ap = ArgumentParser(usage = usage)
