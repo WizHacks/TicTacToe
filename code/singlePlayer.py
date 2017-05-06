@@ -345,6 +345,12 @@ if __name__ == "__main__":
 	serverName = args.serverName
 	serverPort = int(args.serverPort)
 
+	try:
+		int(args.serverPort)
+	except ValueError:
+		print "Please check your arguments!"
+		exit(1)
+
 	epoll = select.epoll()
 	print "Welcome to TicTacToc!"
 	sys.stdout.flush()
