@@ -342,11 +342,10 @@ if __name__ == "__main__":
 	ap.add_argument("serverName", help="The name of the machine on which the server is running.")
 	ap.add_argument("serverPort", help="The port number that the server is listening at.")
 	args = ap.parse_args()
-	serverName = args.serverName
-	serverPort = int(args.serverPort)
+	serverName = args.serverName	
 
 	try:
-		int(args.serverPort)
+		serverPort = int(args.serverPort)
 	except ValueError:
 		print "Please check your arguments!"
 		exit(1)
