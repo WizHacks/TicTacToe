@@ -333,7 +333,7 @@ def help():
 	print "exit\t\t\t- quits the program at any time"
 
 if __name__ == "__main__":
-	debug = False
+	debug = True
 	# parse commandline arguments
 	usage = "%(prog)s serverName serverPort"
 	ap = ArgumentParser(usage = usage)
@@ -342,7 +342,7 @@ if __name__ == "__main__":
 	ap.add_argument("serverName", help="The name of the machine on which the server is running.")
 	ap.add_argument("serverPort", help="The port number that the server is listening at.")
 	args = ap.parse_args()
-	serverName = args.serverName	
+	serverName = args.serverName
 
 	try:
 		serverPort = int(args.serverPort)

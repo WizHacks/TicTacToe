@@ -13,11 +13,18 @@ epoll = select.epoll()
 epoll.register(serverSocket.fileno(), select.EPOLLIN)
 
 class Server(object):
+	'''
+	Server class, used as the server for handling multiple games and unlimited players as permitted by hardware resources
+	players: Dictionary with key as connection's file descriptor and value as JSON format of Player class
+	games: Dictionary with key as game's Id and value as the Board class
+	connections: Dictionary with key as connection's file descriptor and value as actual connection. Used for ePoll connections
+	retransmits: Dictionary with key as connection's file descriptor and value as data that was last sent by server. Only contains most recent data sent by server.
+	'''
 	def __init__(self):
-		self.players = {} # Dictionary with key as connection's file descriptor and value as JSON format of Player class
-		self.games = {} # Dictionary with key as game's Id and value as the Board class
-		self.connections = {} # Dictionary with key as connection's file descriptor and value as actual connection. Used for ePoll connections
-		self.retransmits = {} # Dictionary with key as connection's file descriptor and value as data that was last sent by server. Only contains most recent data sent by server.
+		self.players = {}
+		self.games = {}
+		self.connections = {}
+		self.retransmits = {} 
 
 	'''main methods'''
 	def addConnection(self, connection):
@@ -271,8 +278,9 @@ class Server(object):
 				validMove = currentGame.place(int(requests[2]))
 				if validMove:
 					otherPlayer = currentGame.currentPlayer
-					print currentPlayer
-					print otherPlayer
+					if debug:
+						print "Current Player: ", currentPlayer
+						print "Opposing Player:", otherPlayer
 					self.broadcast("JAW/1.0 200 OK \r\n PRINT:" + str(currentGame) + " \r\n\r\n", [fileno, self.getSocket(otherPlayer)])
 					self.retransmits[fileno] = ["JAW/1.0 200 OK \r\n PRINT:" + str(currentGame) + " \r\n\r\n"]
 					self.retransmits[self.getSocket(otherPlayer)] = ["JAW/1.0 200 OK \r\n PRINT:" + str(currentGame) + " \r\n\r\n"]
@@ -336,7 +344,8 @@ class Server(object):
 					if p != currentPlayer['username']:
 						data += p + ","
 				info = "JAW/1.0 200 OK \r\n PLAYERS:" + data[:(len(data)-1)] + " \r\n\r\n"
-				print info
+				if debug:
+					print "JAW protocal: ", info
 				self.retransmits[fileno] = [info]
 				self.sendMessage(info, fileno)
 		# GAMES
@@ -390,6 +399,7 @@ server = Server()
 
 if __name__ == '__main__':
 	debug = True # False-turn off debugging/logging		True- Turn on debugging/logging
+
 	try:
 		while True:
 			events = epoll.poll(0.01)
