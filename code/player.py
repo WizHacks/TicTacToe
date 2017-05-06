@@ -205,7 +205,7 @@ def processResponse(player, responseList):
 
 	# 401 USERNAME TAKEN
 	if responseList[1] == JAWStatusNum.USERNAME_TAKEN_NUM and responseList[2] == JAWStatuses.USERNAME_TAKEN and player.lastRequestSent == JAWMethods.LOGIN:
-		print "Username as been taken, please try again!"
+		print "Username has been taken, please try again!"
 
 	# 402 USER BUSY
 	if responseList[1] == JAWStatusNum.USER_BUSY_NUM and responseList[2] == JAWStatuses.USER_BUSY and player.lastRequestSent == JAWMethods.PLAY:
@@ -274,7 +274,7 @@ def processStdin(stdinInput):
 			else:
 				print "Invalid number of arguments"
 				print "Expected: place [index]\t [ 1, 2, 3]\n\t\t\t [ 4, 5, 6]\n\t\t\t [ 7, 8, 9]"
-				print "\t\t\t\t- place your symbol at the corresponding poisition labeled in grid above"
+				print "\t- place your symbol at the corresponding poisition labeled in grid above"
 		else:
 			print "Please start a game first!"
 	# elif args[0] == "observe":
@@ -375,7 +375,7 @@ if __name__ == "__main__":
 	ap.add_argument("serverName", help="The name of the machine on which the server is running.")
 	ap.add_argument("serverPort", help="The port number that the server is listening at.")
 	args = ap.parse_args()
-	serverName = args.serverName	
+	serverName = args.serverName
 
 	try:
 		serverPort = int(args.serverPort)

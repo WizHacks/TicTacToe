@@ -271,8 +271,9 @@ class Server(object):
 				validMove = currentGame.place(int(requests[2]))
 				if validMove:
 					otherPlayer = currentGame.currentPlayer
-					print currentPlayer
-					print otherPlayer
+					if debug:
+						print "Current Player: ", currentPlayer
+						print "Opposing Player:", otherPlayer
 					self.broadcast("JAW/1.0 200 OK \r\n PRINT:" + str(currentGame) + " \r\n\r\n", [fileno, self.getSocket(otherPlayer)])
 					self.retransmits[fileno] = ["JAW/1.0 200 OK \r\n PRINT:" + str(currentGame) + " \r\n\r\n"]
 					self.retransmits[self.getSocket(otherPlayer)] = ["JAW/1.0 200 OK \r\n PRINT:" + str(currentGame) + " \r\n\r\n"]
@@ -336,7 +337,8 @@ class Server(object):
 					if p != currentPlayer['username']:
 						data += p + ","
 				info = "JAW/1.0 200 OK \r\n PLAYERS:" + data[:(len(data)-1)] + " \r\n\r\n"
-				print info
+				if debug:
+					print "JAW protocal: ", info
 				self.retransmits[fileno] = [info]
 				self.sendMessage(info, fileno)
 		# GAMES
@@ -389,7 +391,7 @@ class Server(object):
 server = Server()
 
 if __name__ == '__main__':
-	debug = False # False-turn off debugging/logging		True- Turn on debugging/logging
+	debug = True 			# False-turn off debugging/logging		True- Turn on debugging/logging
 	try:
 		while True:
 			events = epoll.poll(0.01)
