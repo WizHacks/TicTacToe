@@ -215,7 +215,7 @@ class Server(object):
 
 		# LOGIN
 		if requests[1] == "LOGIN":
-			# Invalid command usage
+			# Invalid command usage or 2 players on server already
 			if len(requests) < 3 or len(self.players) > 2:
 				self.sendMessage("JAW/1.0 400 ERROR \r\n\r\n", fileno)
 				fNum = fileno
@@ -223,6 +223,8 @@ class Server(object):
 				self.connections[fNum].close()
 				del self.connections[fNum]
 			else:
+				if debug:
+					print datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S') + "\tNumber of players: " + str(len(self.players))
 				# Extract player data
 				newPlayer = request[request.find(" ")+6 : len(request)]
 				try:
@@ -241,7 +243,7 @@ class Server(object):
 					self.retransmits[fileno] = ["JAW/1.0 401 USERNAME_TAKEN \r\n\r\n"]
 				else:
 					self.addPlayer(connection, player)
-					if len(self.connections) == 2:
+					if len(self.players) == 2:
 						# If 2 players are on, autoplay begins
 						otherPlayer = None
 						for key, value in self.players.iteritems():
@@ -298,17 +300,22 @@ class Server(object):
 						self.endGame(currentPlayer['gameId'], currentPlayer, self.players[self.getSocket(otherPlayer)])
 						time.sleep(3) # Temporarily pause server to allow client sufficient time to receive data correctly. ePoll sends data too fast.
 
-						#Automatically start a new game
-						otherPlayer = self.getPlayer(otherPlayer)
-						game = self.createGame(otherPlayer, currentPlayer)
-						self.retransmits[fileno] = ["JAW/1.0 200 OK \r\n OTHER_PLAYER:" + otherPlayer['username'] + " \r\n\r\n"]
-						self.retransmits[fileno].append("JAW/1.0 200 OK \r\n PRINT:" + str(game) + " \r\n\r\n")
-						self.retransmits[fileno].append("JAW/1.0 200 OK \r\n PLAYER:" + game.currentPlayer + " \r\n\r\n")
-						self.retransmits[self.getSocket(otherPlayer['username'])] = ["JAW/1.0 200 OK \r\n OTHER_PLAYER:" + currentPlayer['username'] + " \r\n\r\n", "JAW/1.0 200 OK \r\n PRINT:" + str(game) + " \r\n\r\n", "JAW/1.0 200 OK \r\n PLAYER:" + game.currentPlayer + " \r\n\r\n"]
-						self.sendMessage("JAW/1.0 200 OK \r\n OTHER_PLAYER:" + otherPlayer['username'] + " \r\n\r\n", fileno)
-						self.sendMessage("JAW/1.0 200 OK \r\n OTHER_PLAYER:" + currentPlayer['username'] + " \r\n\r\n", self.getSocket(otherPlayer['username']))
-						self.broadcast("JAW/1.0 200 OK \r\n PRINT:" + str(game) + " \r\n\r\n", [fileno, self.getSocket(otherPlayer['username'])])
-						self.broadcast("JAW/1.0 200 OK \r\n PLAYER:" + game.currentPlayer + " \r\n\r\n", [fileno, self.getSocket(otherPlayer['username'])])
+						if len(self.players) == 2:
+							#Automatically start a new game
+							otherPlayer = self.getPlayer(otherPlayer)
+							game = self.createGame(otherPlayer, currentPlayer)
+							self.retransmits[fileno] = ["JAW/1.0 200 OK \r\n OTHER_PLAYER:" + otherPlayer['username'] + " \r\n\r\n"]
+							self.retransmits[fileno].append("JAW/1.0 200 OK \r\n PRINT:" + str(game) + " \r\n\r\n")
+							self.retransmits[fileno].append("JAW/1.0 200 OK \r\n PLAYER:" + game.currentPlayer + " \r\n\r\n")
+							self.retransmits[self.getSocket(otherPlayer['username'])] = ["JAW/1.0 200 OK \r\n OTHER_PLAYER:" + currentPlayer['username'] + " \r\n\r\n", "JAW/1.0 200 OK \r\n PRINT:" + str(game) + " \r\n\r\n", "JAW/1.0 200 OK \r\n PLAYER:" + game.currentPlayer + " \r\n\r\n"]
+							self.sendMessage("JAW/1.0 200 OK \r\n OTHER_PLAYER:" + otherPlayer['username'] + " \r\n\r\n", fileno)
+							self.sendMessage("JAW/1.0 200 OK \r\n OTHER_PLAYER:" + currentPlayer['username'] + " \r\n\r\n", self.getSocket(otherPlayer['username']))
+							self.broadcast("JAW/1.0 200 OK \r\n PRINT:" + str(game) + " \r\n\r\n", [fileno, self.getSocket(otherPlayer['username'])])
+							self.broadcast("JAW/1.0 200 OK \r\n PLAYER:" + game.currentPlayer + " \r\n\r\n", [fileno, self.getSocket(otherPlayer['username'])])
+						else:
+							# Player has to wait for another player
+							self.sendMessage("JAW/1.0 406 PLEASE_WAIT \r\n\r\n", fileno)
+							self.retransmits[fileno] = ["JAW/1.0 406 PLEASE_WAIT \r\n\r\n"]
 					else:
 						# Game not finished
 						self.broadcast("JAW/1.0 200 OK \r\n PLAYER:" + currentGame.currentPlayer + " \r\n\r\n", [fileno, self.getSocket(otherPlayer)])
