@@ -8,8 +8,8 @@ An online modified version of the game Tic-Tac-Toe using Internet domain sockets
 
 
 ### Running the Program
-Start the server on a computer  
-Start the client on a computer with arguments corresponding to the host address and port number of the server  
+Start the server on a linux computer
+Start the client on a linux computer with arguments corresponding to the host address and port number of the server  
 ```
 python server.py
 python player.py 127.0.0.1 2017
@@ -19,4 +19,6 @@ python player.py 127.0.0.1 2017
 - [ePoll](http://scotdoyle.com/python-epoll-howto.html)
 
 ## Login/Playing instructions	(should cleanup client/server before furthering this)
- - [Play](https://drive.google.com/open?id=0B_v_r4o7hi1_SnF3RFRGY09zQWc)
+ - [Play](https://docs.google.com/a/stonybrook.edu/document/d/1voOAcdXHMq_Y6RCU_X6idHN5l3ql_KYj1AFUXOqSDu0/edit?usp=sharing)
+ - [Testing Documentation](https://docs.google.com/a/stonybrook.edu/document/d/1meacI-wt4csacaBh3ZZhD9vHnwbOVpFOKOv0zb9a0OI/edit?usp=sharing)
+
