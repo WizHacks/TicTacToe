@@ -13,11 +13,18 @@ epoll = select.epoll()
 epoll.register(serverSocket.fileno(), select.EPOLLIN)
 
 class Server(object):
+	'''
+	Server class, used as the server for handling maximum of 2 players and 1 ongoing game
+	players: Dictionary with key as connection's file descriptor and value as JSON format of Player class
+	games: Dictionary with key as game's Id and value as the Board class
+	connections: Dictionary with key as connection's file descriptor and value as actual connection. Used for ePoll connections
+	retransmits: Dictionary with key as connection's file descriptor and value as data that was last sent by server. Only contains most recent data sent by server.
+	'''
 	def __init__(self):
-		self.players = {} # Dictionary with key as connection's file descriptor and value as JSON format of Player class
-		self.games = {} # Dictionary with key as game's Id and value as the Board class
-		self.connections = {} # Dictionary with key as connection's file descriptor and value as actual connection. Used for ePoll connections
-		self.retransmits = {} # Dictionary with key as connection's file descriptor and value as data that was last sent by server. Only contains most recent data sent by server.
+		self.players = {} 
+		self.games = {} 
+		self.connections = {} 
+		self.retransmits = {} 
 
 	'''main methods'''
 	def addConnection(self, connection):
