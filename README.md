@@ -1,5 +1,5 @@
 # TicTacToe
-# Jia Li, Andrew Lam, and Wendy Zheng
+Jia Li, Andrew Lam, and Wendy Zheng
 
 ## System Dependencies
 - Python 2.7
