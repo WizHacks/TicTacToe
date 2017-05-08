@@ -35,10 +35,9 @@ python player.py serverDomain port
 ```
 Please note that the default port value is 9347
 
+## Login/Playing instructions
+ - Please see "Project Documentation.pdf" in Documentation folder for System, Testing and User Documenation
+
 ### References/Tutorials
 - [ePoll](http://scotdoyle.com/python-epoll-howto.html)
-
-## Login/Playing instructions	(should cleanup client/server before furthering this)
- - [Play](https://docs.google.com/a/stonybrook.edu/document/d/1voOAcdXHMq_Y6RCU_X6idHN5l3ql_KYj1AFUXOqSDu0/edit?usp=sharing)
- - [Testing Documentation](https://docs.google.com/a/stonybrook.edu/document/d/1meacI-wt4csacaBh3ZZhD9vHnwbOVpFOKOv0zb9a0OI/edit?usp=sharing)
 
