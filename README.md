@@ -36,7 +36,7 @@ python player.py serverDomain port
 Please note that the default port value is 9347
 
 ## Login/Playing instructions
- - Please see "Project Documentation.pdf" in Documentation folder for System, Testing and User Documenation
+ - Please see "Project Documentation.pdf" in Documentation folder for System, Testing and User Documentation
 
 ### References/Tutorials
 - [ePoll](http://scotdoyle.com/python-epoll-howto.html)
